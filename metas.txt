@@ -1,0 +1,255 @@
+Caio Bruno	01/2024	R$ 500.000,00
+Flávia Cabral	01/2024	R$ 150.000,00
+Flavio de Paula	01/2024	R$ 300.000,00
+Leila Santos	01/2024	R$ 200.000,00
+Rafael Rodrigo	01/2024	R$ 200.000,00
+Raquel Gomes	01/2024	R$ 0,00
+Caio Bruno	02/2024	R$ 410.000,00
+Flávia Cabral	02/2024	R$ 360.000,00
+Flavio de Paula	02/2024	R$ 610.000,00
+Leila Santos	02/2024	R$ 410.000,00
+Rafael Rodrigo	02/2024	R$ 360.000,00
+Raquel Gomes	02/2024	R$ 250.000,00
+Caio Bruno	03/2024	R$ 450.000,00
+Flávia Cabral	03/2024	R$ 400.000,00
+Flavio de Paula	03/2024	R$ 750.000,00
+Leila Santos	03/2024	R$ 450.000,00
+Rafael Rodrigo	03/2024	R$ 450.000,00
+Raquel Gomes	03/2024	R$ 300.000,00
+Caio Bruno	04/2024	R$ 450.000,00
+Flávia Cabral	04/2024	R$ 350.000,00
+Flavio de Paula	04/2024	R$ 750.000,00
+Leila Santos	04/2024	R$ 500.000,00
+Rafael Rodrigo	04/2024	R$ 450.000,00
+Raquel Gomes	04/2024	R$ 350.000,00
+Caio Bruno	05/2024	R$ 400.000,00
+Flávia Cabral	05/2024	R$ 350.000,00
+Flavio de Paula	05/2024	R$ 750.000,00
+Leila Santos	05/2024	R$ 400.000,00
+Rafael Rodrigo	05/2024	R$ 350.000,00
+Raquel Gomes	05/2024	R$ 250.000,00
+Caio Bruno	06/2024	R$ 350.000,00
+Flávia Cabral	06/2024	R$ 300.000,00
+Flavio de Paula	06/2024	R$ 700.000,00
+Leila Santos	06/2024	R$ 350.000,00
+Rafael Rodrigo	06/2024	R$ 300.000,00
+Raquel Gomes	06/2024	R$ 250.000,00
+Caio Bruno	07/2024	R$ 550.000,00
+Flávia Cabral	07/2024	R$ 550.000,00
+Flavio de Paula	07/2024	R$ 750.000,00
+Leila Santos	07/2024	R$ 550.000,00
+Rafael Rodrigo	07/2024	R$ 550.000,00
+Raquel Gomes	07/2024	R$ 450.000,00
+Caio Bruno	08/2024	R$ 450.000,00
+Flávia Cabral	08/2024	R$ 450.000,00
+Flavio de Paula	08/2024	R$ 750.000,00
+Leila Santos	08/2024	R$ 450.000,00
+Rafael Rodrigo	08/2024	R$ 450.000,00
+Raquel Gomes	08/2024	R$ 450.000,00
+Caio Bruno	09/2024	R$ 400.000,00
+Flávia Cabral	09/2024	R$ 400.000,00
+Flavio de Paula	09/2024	R$ 700.000,00
+Leila Santos	09/2024	R$ 400.000,00
+Rafael Rodrigo	09/2024	R$ 450.000,00
+Raquel Gomes	09/2024	R$ 350.000,00
+Rodrigo da Silva	09/2024	R$ 200.000,00
+Juliana Madazio	09/2024	R$ 100.000,00
+Caio Bruno	10/2024	R$ 350.000,00
+Flávia Cabral	10/2024	R$ 350.000,00
+Flavio de Paula	10/2024	R$ 700.000,00
+Leila Santos	10/2024	R$ 350.000,00
+Rafael Rodrigo	10/2024	R$ 350.000,00
+Raquel Gomes	10/2024	R$ 350.000,00
+Rodrigo da Silva	10/2024	R$ 300.000,00
+Juliana Madazio	10/2024	R$ 250.000,00
+Caio Bruno	11/2024	R$ 650.000,00
+Flávia Cabral	11/2024	R$ 600.000,00
+Flavio de Paula	11/2024	R$ 750.000,00
+Leila Santos	11/2024	R$ 600.000,00
+Rafael Rodrigo	11/2024	R$ 600.000,00
+Raquel Gomes	11/2024	R$ 400.000,00
+Rodrigo da Silva	11/2024	R$ 500.000,00
+Juliana Madazio	11/2024	R$ 400.000,00
+Caio Bruno	12/2024	R$ 800.000,00
+Flávia Cabral	12/2024	R$ 800.000,00
+Flavio de Paula	12/2024	R$ 1.200.000,00
+Leila Santos	12/2024	R$ 800.000,00
+Rafael Rodrigo	12/2024	R$ 800.000,00
+Lorena Fernandes	12/2024	R$ 300.000,00
+Rodrigo da Silva	12/2024	R$ 700.000,00
+Juliana Madazio	12/2024	R$ 350.000,00
+Carol Carvalho	12/2024	R$ 250.000,00
+Caio Bruno	01/2025	R$ 710.048,34
+Flávia Cabral	01/2025	R$ 400.000,00
+Flavio de Paula	01/2025	R$ 550.000,00
+Leila Santos	01/2025	R$ 400.000,00
+Rafael Rodrigo	01/2025	R$ 400.000,00
+Lorena Fernandes	01/2025	R$ 59.000,00
+Rodrigo da Silva	01/2025	R$ 291.000,00
+Juliana Madazio	01/2025	R$ 300.000,00
+Carol Carvalho	01/2025	R$ 350.000,00
+Novo executivo	01/2025	R$ 550.000,00
+Caio Bruno	02/2025	R$ 550.000,00
+Flávia Cabral	02/2025	R$ 350.000,00
+Flavio de Paula	02/2025	R$ 650.000,00
+Leila Santos	02/2025	R$ 400.000,00
+Rafael Rodrigo	02/2025	R$ 400.000,00
+Lorena Fernandes	02/2025	R$ 150.000,00
+Rodrigo da Silva	02/2025	R$ 240.000,00
+Juliana Madazio	02/2025	R$ 240.000,00
+Carol Carvalho	02/2025	R$ 250.000,00
+Novo executivo	02/2025	R$ 115.332,85
+Caio Bruno	03/2025	R$ 650.000,00
+Flávia Cabral	03/2025	R$ 550.000,00
+Flavio de Paula	03/2025	R$ 850.000,00
+Leila Santos	03/2025	R$ 550.000,00
+Rafael Rodrigo	03/2025	R$ 556.347,29
+Lorena Fernandes	03/2025	R$ 300.000,00
+Rodrigo da Silva	03/2025	R$ 425.000,00
+Juliana Madazio	03/2025	R$ 425.000,00
+Carol Carvalho	03/2025	R$ 400.000,00
+Henri Marques	03/2025	R$ 300.000,00
+Caio Bruno	04/2025	R$ 500.000,00
+Flávia Cabral	04/2025	R$ 345.082,96
+Flavio de Paula	04/2025	R$ 665.000,00
+Leila Santos	04/2025	R$ 550.000,00
+Rafael Rodrigo	04/2025	R$ 435.000,00
+Lorena Fernandes	04/2025	R$ 250.000,00
+Rodrigo da Silva	04/2025	R$ 300.000,00
+Juliana Madazio	04/2025	R$ 300.000,00
+Carol Carvalho	04/2025	R$ 350.000,00
+Henri Marques	04/2025	R$ 250.000,00
+Caio Bruno	05/2025	R$ 650.000,00
+Flávia Cabral	05/2025	R$ 445.000,00
+Flavio de Paula	05/2025	R$ 950.000,00
+Leila Santos	05/2025	R$ 600.000,00
+Rafael Rodrigo	05/2025	R$ 600.000,00
+Lorena Fernandes	05/2025	R$ 300.000,00
+Rodrigo da Silva	05/2025	R$ 350.000,00
+Juliana Madazio	05/2025	R$ 468.000,00
+Carol Carvalho	05/2025	R$ 400.000,00
+Henri Marques	05/2025	R$ 156.151,47
+Caio Bruno	06/2025	R$ 500.000,00
+Flávia Cabral	06/2025	R$ 345.000,00
+Flavio de Paula	06/2025	R$ 625.000,00
+Leila Santos	06/2025	R$ 400.000,00
+Rafael Rodrigo	06/2025	R$ 500.000,00
+Lorena Fernandes	06/2025	R$ 240.000,00
+Rodrigo da Silva	06/2025	R$ 344.894,97
+Juliana Madazio	06/2025	R$ 300.000,00
+Carol Carvalho	06/2025	R$ 350.000,00
+Henri Marques	06/2025	R$ 240.000,00
+Caio Bruno	07/2025	R$ 550.000,00
+Flávia Cabral	07/2025	R$ 485.000,00
+Flavio de Paula	07/2025	R$ 895.000,00
+Leila Santos	07/2025	R$ 510.000,00
+Rafael Rodrigo	07/2025	R$ 550.000,00
+Lorena Fernandes	07/2025	R$ 378.000,00
+Rodrigo da Silva	07/2025	R$ 548.000,00
+Juliana Madazio	07/2025	R$ 943.581,79
+Carol Carvalho	07/2025	R$ 278.000,00
+Henri Marques	07/2025	R$ 291.000,00
+Caio Bruno	08/2025	R$ 450.000,00
+Carol Carvalho	08/2025	R$ 344.000,00
+Flávia Cabral	08/2025	R$ 425.000,00
+Flavio de Paula	08/2025	R$ 885.000,00
+Henri Marques	08/2025	R$ 418.581,79
+Juliana Madazio	08/2025	R$ 550.000,00
+Leila Santos	08/2025	R$ 500.000,00
+Lorena Fernandes	08/2025	R$ 478.000,00
+Rafael Rodrigo	08/2025	R$ 470.000,00
+Rodrigo da Silva	08/2025	R$ 548.000,00
+Nathalia Salvio	08/2025	R$ 315.627,46
+Caio Bruno	09/2025	R$ 415.000,00
+Carol Carvalho	09/2025	R$ 350.000,00
+Flávia Cabral	09/2025	R$ 395.000,00
+Flavio de Paula	09/2025	R$ 745.000,00
+Henri Marques	09/2025	R$ 408.581,79
+Juliana Madazio	09/2025	R$ 451.529,26
+Leila Santos	09/2025	R$ 437.000,00
+Lorena Fernandes	09/2025	R$ 388.000,00
+Rafael Rodrigo	09/2025	R$ 492.000,00
+Rodrigo da Silva	09/2025	R$ 448.000,00
+Novo executivo	09/2025	R$ 405.627,46
+Caio Bruno	10/2025	R$ 520.000,00
+Carol Carvalho	10/2025	R$ 460.000,00
+Flávia Cabral	10/2025	R$ 490.000,00
+Flavio de Paula	10/2025	R$ 635.000,00
+Executivo Rio 1	10/2025	R$ 380.000,00
+Juliana Madazio	10/2025	R$ 450.000,00
+Leila Santos	10/2025	R$ 520.000,00
+Lorena Fernandes	10/2025	R$ 378.000,00
+Rafael Rodrigo	10/2025	R$ 520.000,00
+Rodrigo da Silva	10/2025	R$ 520.000,00
+Executivo Rio 2	10/2025	R$ 452.697,73
+Caio Bruno	11/2025	R$ 650.000,00
+Carol Carvalho	11/2025	R$ 630.000,00
+Flávia Cabral	11/2025	R$ 570.000,00
+Flavio de Paula	11/2025	R$ 860.000,00
+Janaina Orlani	11/2025	R$ 480.000,00
+Juliana Madazio	11/2025	R$ 498.000,00
+Leila Santos	11/2025	R$ 580.000,00
+Lorena Fernandes	11/2025	R$ 494.000,00
+Rafael Rodrigo	11/2025	R$ 580.000,00
+Rodrigo da Silva	11/2025	R$ 719.329,38
+Caio Bruno	12/2025	R$ 750.000,00
+Carol Carvalho	12/2025	R$ 730.000,00
+Flávia Cabral	12/2025	R$ 670.000,00
+Flavio de Paula	12/2025	R$ 860.000,00
+Janaina Orlani	12/2025	R$ 480.000,00
+Juliana Madazio	12/2025	R$ 698.000,00
+Leila Santos	12/2025	R$ 680.000,00
+Lorena Fernandes	12/2025	R$ 594.000,00
+Rafael Rodrigo	12/2025	R$ 780.000,00
+Rodrigo da Silva	12/2025	R$ 719.329,38
+Executiva (GO)	12/2025	R$ 832.256,10
+Caio Bruno	01/2026	R$ 500.000,00
+Carol Carvalho	01/2026	R$ 350.000,00
+Flávia Cabral	01/2026	R$ 400.000,00
+Flavio de Paula	01/2026	R$ 600.000,00
+Janaina Orlani	01/2026	R$ 120.000,00
+Juliana Madazio	01/2026	R$ 190.000,00
+Leila Santos	01/2026	R$ 400.000,00
+Lorena Fernandes	01/2026	R$ 190.000,00
+Rafael Rodrigo	01/2026	R$ 450.000,00
+Rodrigo da Silva	01/2026	R$ 400.000,00
+Caio Bruno	02/2026	R$ 370.000,00
+Carol Carvalho	02/2026	R$ 300.000,00
+Flávia Cabral	02/2026	R$ 330.082,96
+Flavio de Paula	02/2026	R$ 500.000,00
+Janaina Orlani	02/2026	R$ 280.000,00
+Juliana Madazio	02/2026	R$ 300.000,00
+Leila Santos	02/2026	R$ 350.000,00
+Lorena Fernandes	02/2026	R$ 250.000,00
+Rafael Rodrigo	02/2026	R$ 300.000,00
+Rodrigo da Silva	02/2026	R$ 320.000,00
+Rodrigo da Silva	03/2026	R$ 620.000,00
+Caio Bruno	03/2026	R$ 670.000,00
+Carol Carvalho	03/2026	R$ 520.000,00
+Flávia Cabral	03/2026	R$ 580.680,22
+Flavio de Paula	03/2026	R$ 800.000,00
+Janaina Orlani	03/2026	R$ 480.000,00
+Juliana Madazio	03/2026	R$ 600.000,00
+Leila Santos	03/2026	R$ 650.000,00
+Lorena Fernandes	03/2026	R$ 580.000,00
+Novo executivo BSB	03/2026	R$ 650.000,00
+Caio Bruno	04/2026	R$ 850.000,00
+Carol Carvalho	04/2026	R$ 420.000,00
+Flávia Cabral	04/2026	R$ 420.680,22
+Flavio de Paula	04/2026	R$ 700.000,00
+Janaina Orlani	04/2026	R$ 450.000,00
+Juliana Madazio	04/2026	R$ 402.870,16
+Leila Santos	04/2026	R$ 500.000,00
+Lorena Fernandes	04/2026	R$ 380.000,00
+Novo executivo BSB	04/2026	R$ 100.000,00
+Rodrigo da Silva	04/2026	R$ 550.000,00
+Caio Bruno	05/2026	R$ 650.000,00
+Carol Carvalho	05/2026	R$ 500.000,00
+Flávia Cabral	05/2026	R$ 490.000,00
+Flavio de Paula	05/2026	R$ 800.000,00
+Janaina Orlani	05/2026	R$ 590.000,00
+Juliana Madazio	05/2026	R$ 502.000,00
+Leila Santos	05/2026	R$ 620.000,00
+Lorena Fernandes	05/2026	R$ 480.000,00
+Novo executivo BSB	05/2026	R$ 100.000,00
+Rodrigo da Silva	05/2026	R$ 750.173,28
