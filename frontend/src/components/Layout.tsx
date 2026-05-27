@@ -11,6 +11,16 @@ export default function Layout() {
     window.location.href = "/login"
   }
 
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    isActive
+      ? "rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-red-600 shadow-sm"
+      : "rounded-xl px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/10"
+
+  const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
+    isActive
+      ? "whitespace-nowrap rounded-xl bg-white px-4 py-2 text-xs font-bold text-red-600"
+      : "whitespace-nowrap rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white"
+
   return (
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-50 border-b border-red-700 bg-red-600 shadow-sm">
@@ -20,32 +30,20 @@ export default function Layout() {
               Desempenho Comercial
             </strong>
 
-            <span className="truncate text-sm text-red-100">
-              {user?.nome}
-            </span>
+            <span className="truncate text-sm text-red-100">{user?.nome}</span>
           </div>
 
           <nav className="hidden items-center gap-2 md:flex">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                isActive
-                  ? "rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-red-600 shadow-sm"
-                  : "rounded-xl px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/10"
-              }
-            >
+            <NavLink to="/" className={linkClass}>
               Meu Perfil
             </NavLink>
 
-            <NavLink
-              to="/busca-pi"
-              className={({ isActive }) =>
-                isActive
-                  ? "rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-red-600 shadow-sm"
-                  : "rounded-xl px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/10"
-              }
-            >
+            <NavLink to="/busca-pi" className={linkClass}>
               Busca de PI
+            </NavLink>
+
+            <NavLink to="/vendas-do-dia" className={linkClass}>
+              Vendas do Dia
             </NavLink>
           </nav>
 
@@ -58,26 +56,16 @@ export default function Layout() {
         </div>
 
         <div className="flex gap-2 overflow-x-auto border-t border-white/10 px-4 py-3 md:hidden">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              isActive
-                ? "whitespace-nowrap rounded-xl bg-white px-4 py-2 text-xs font-bold text-red-600"
-                : "whitespace-nowrap rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white"
-            }
-          >
+          <NavLink to="/" className={mobileLinkClass}>
             Meu Perfil
           </NavLink>
 
-          <NavLink
-            to="/busca-pi"
-            className={({ isActive }) =>
-              isActive
-                ? "whitespace-nowrap rounded-xl bg-white px-4 py-2 text-xs font-bold text-red-600"
-                : "whitespace-nowrap rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white"
-            }
-          >
+          <NavLink to="/busca-pi" className={mobileLinkClass}>
             Busca de PI
+          </NavLink>
+
+          <NavLink to="/vendas-do-dia" className={mobileLinkClass}>
+            Vendas do Dia
           </NavLink>
         </div>
       </header>
