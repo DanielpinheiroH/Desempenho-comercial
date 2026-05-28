@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-import { api, getToken, getUser } from "../services/api"
+import { getPisCached, getUser } from "../services/api"
 
 type Pi = {
   numero_pi: string
@@ -195,15 +195,9 @@ export default function DashboardAdmin() {
     try {
       setLoading(true)
 
-      const token = getToken()
+      const dadosCache = await getPisCached()
 
-      const response = await api.get("/api/pis", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      setDados(Array.isArray(response.data) ? response.data : [])
+      setDados(Array.isArray(dadosCache) ? (dadosCache as Pi[]) : [])
     } catch (error) {
       console.error(error)
       setDados([])
@@ -626,28 +620,28 @@ export default function DashboardAdmin() {
             />
           </section>
 
-         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-  <ActionCard
-    label="Anunciantes"
-    title={String(totalAnunciantes)}
-    helper="Clique para ver todos"
-    onClick={() => navigate("/admin/anunciantes")}
-  />
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <ActionCard
+              label="Anunciantes"
+              title={String(totalAnunciantes)}
+              helper="Clique para ver todos"
+              onClick={() => navigate("/admin/anunciantes")}
+            />
 
-  <ActionCard
-    label="Agências"
-    title={String(totalAgencias)}
-    helper="Clique para ver todas"
-    onClick={() => navigate("/admin/agencias")}
-  />
+            <ActionCard
+              label="Agências"
+              title={String(totalAgencias)}
+              helper="Clique para ver todas"
+              onClick={() => navigate("/admin/agencias")}
+            />
 
-  <ActionCard
-    label="Busca de PI"
-    title="Abrir consulta"
-    helper="Pesquisar registros"
-    onClick={() => navigate("/busca-pi")}
-  />
-</section>
+            <ActionCard
+              label="Busca de PI"
+              title="Abrir consulta"
+              helper="Pesquisar registros"
+              onClick={() => navigate("/busca-pi")}
+            />
+          </section>
 
           <section className="rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="mb-5 flex flex-col justify-between gap-2 md:flex-row md:items-end">
@@ -700,138 +694,136 @@ export default function DashboardAdmin() {
           </section>
 
           <section className="rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm">
-  <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-    <div>
-      <h2 className="text-xl font-black">
-        Faturamento por ano
-      </h2>
+            <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 className="text-xl font-black">Faturamento por ano</h2>
 
-      <p className="mt-1 text-sm text-zinc-500">
-        Clique em um ano para visualizar os meses consolidados.
-      </p>
-    </div>
-
-    <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-500">
-      {faturamentoPorAno.length} anos
-    </span>
-  </div>
-
-  {faturamentoPorAno.length === 0 ? (
-    <EmptyState text="Nenhum faturamento encontrado para os filtros selecionados." />
-  ) : (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-      {faturamentoPorAno.map((ano) => {
-        const aberto = anoAberto === ano.ano
-
-        return (
-          <div
-            key={ano.ano}
-            className="min-w-0 overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-4"
-          >
-            <button
-              type="button"
-              onClick={() => alternarAno(ano.ano)}
-              className="w-full text-left"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <strong className="block text-xl font-black text-zinc-950">
-                    {ano.ano}
-                  </strong>
-
-                  <small className="block text-zinc-400">
-                    {ano.pis} PIs
-                  </small>
-                </div>
-
-                <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-black text-red-600">
-                  {aberto ? "Fechar" : "Abrir"}
-                </span>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Clique em um ano para visualizar os meses consolidados.
+                </p>
               </div>
 
-              <div className="mt-4 space-y-3">
-  <div className="min-w-0">
-    <span className="block text-[11px] font-bold uppercase tracking-wide text-zinc-500">
-      Líquido
-    </span>
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-500">
+                {faturamentoPorAno.length} anos
+              </span>
+            </div>
 
-    <div className="mt-1 leading-tight">
-      <span className="block text-[10px] font-bold text-zinc-500">
-        R$
-      </span>
+            {faturamentoPorAno.length === 0 ? (
+              <EmptyState text="Nenhum faturamento encontrado para os filtros selecionados." />
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                {faturamentoPorAno.map((ano) => {
+                  const aberto = anoAberto === ano.ano
 
-      <strong className="block text-[12px] font-black leading-tight text-zinc-950">
-        {Number(ano.liquido || 0).toLocaleString("pt-BR")}
-      </strong>
-    </div>
-  </div>
-
-  <div className="min-w-0">
-    <span className="block text-[11px] font-bold uppercase tracking-wide text-zinc-500">
-      Bruto
-    </span>
-
-    <div className="mt-1 leading-tight">
-      <strong className="block text-[11px] font-black text-zinc-700">
-        {money(ano.bruto)}
-      </strong>
-    </div>
-  </div>
-</div>
-            </button>
-
-            {aberto && (
-              <div className="mt-4 border-t border-zinc-200 pt-4">
-                <button
-                  type="button"
-                  onClick={() => abrirAno(ano.ano)}
-                  className="mb-3 w-full rounded-xl bg-red-600 px-3 py-2 text-xs font-black text-white transition hover:bg-red-700"
-                >
-                  Ver ano inteiro
-                </button>
-
-                <div className="space-y-2">
-                  {ano.meses
-                    .sort((a, b) => a.mesNumero - b.mesNumero)
-                    .map((mes) => (
+                  return (
+                    <div
+                      key={ano.ano}
+                      className="min-w-0 overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-4"
+                    >
                       <button
-                        key={mes.mes}
                         type="button"
-                        onClick={() => abrirMes(mes.mes)}
-                        className="w-full rounded-xl border border-zinc-200 bg-white p-3 text-left transition hover:border-red-300 hover:bg-red-50"
+                        onClick={() => alternarAno(ano.ano)}
+                        className="w-full text-left"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <strong className="block text-sm font-black text-zinc-950">
-                              {mes.mes}
+                            <strong className="block text-xl font-black text-zinc-950">
+                              {ano.ano}
                             </strong>
 
-                            <small className="text-zinc-500">
-                              {mes.pis} PIs
+                            <small className="block text-zinc-400">
+                              {ano.pis} PIs
                             </small>
                           </div>
 
-                          <div className="min-w-0 text-right">
-                            <b className="block break-words text-[10px] font-black leading-tight text-zinc-950">
-  {money(mes.liquido)}
-</b>
+                          <span className="shrink-0 rounded-full bg-white px-2 py-1 text-[10px] font-black text-red-600">
+                            {aberto ? "Fechar" : "Abrir"}
+                          </span>
+                        </div>
 
-<small className="mt-1 block break-words text-[9px] leading-tight text-zinc-400">
-  Bruto: {money(mes.bruto)}
-</small>
+                        <div className="mt-4 space-y-3">
+                          <div className="min-w-0">
+                            <span className="block text-[11px] font-bold uppercase tracking-wide text-zinc-500">
+                              Líquido
+                            </span>
+
+                            <div className="mt-1 leading-tight">
+                              <span className="block text-[10px] font-bold text-zinc-500">
+                                R$
+                              </span>
+
+                              <strong className="block text-[12px] font-black leading-tight text-zinc-950">
+                                {Number(ano.liquido || 0).toLocaleString("pt-BR")}
+                              </strong>
+                            </div>
+                          </div>
+
+                          <div className="min-w-0">
+                            <span className="block text-[11px] font-bold uppercase tracking-wide text-zinc-500">
+                              Bruto
+                            </span>
+
+                            <div className="mt-1 leading-tight">
+                              <strong className="block text-[11px] font-black text-zinc-700">
+                                {money(ano.bruto)}
+                              </strong>
+                            </div>
                           </div>
                         </div>
                       </button>
-                    ))}
-                </div>
+
+                      {aberto && (
+                        <div className="mt-4 border-t border-zinc-200 pt-4">
+                          <button
+                            type="button"
+                            onClick={() => abrirAno(ano.ano)}
+                            className="mb-3 w-full rounded-xl bg-red-600 px-3 py-2 text-xs font-black text-white transition hover:bg-red-700"
+                          >
+                            Ver ano inteiro
+                          </button>
+
+                          <div className="space-y-2">
+                            {ano.meses
+                              .sort((a, b) => a.mesNumero - b.mesNumero)
+                              .map((mes) => (
+                                <button
+                                  key={mes.mes}
+                                  type="button"
+                                  onClick={() => abrirMes(mes.mes)}
+                                  className="w-full rounded-xl border border-zinc-200 bg-white p-3 text-left transition hover:border-red-300 hover:bg-red-50"
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <strong className="block text-sm font-black text-zinc-950">
+                                        {mes.mes}
+                                      </strong>
+
+                                      <small className="text-zinc-500">
+                                        {mes.pis} PIs
+                                      </small>
+                                    </div>
+
+                                    <div className="min-w-0 text-right">
+                                      <b className="block break-words text-[10px] font-black leading-tight text-zinc-950">
+                                        {money(mes.liquido)}
+                                      </b>
+
+                                      <small className="mt-1 block break-words text-[9px] leading-tight text-zinc-400">
+                                        Bruto: {money(mes.bruto)}
+                                      </small>
+                                    </div>
+                                  </div>
+                                </button>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
-          </div>
-        )
-      })}
-    </div>
-  )}
-</section>
+          </section>
 
           <section className="grid gap-6 xl:grid-cols-2">
             <RankingCard title="Top anunciantes" items={topAnunciantes} />

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
-import { api, getToken } from "../services/api"
+import { getPisCached } from "../services/api"
 
 type Pi = {
   numero_pi: string
@@ -170,15 +170,9 @@ export default function AdminAreaDetalhe() {
     try {
       setLoading(true)
 
-      const token = getToken()
+      const dadosCache = await getPisCached()
 
-      const response = await api.get("/api/pis", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      setDados(Array.isArray(response.data) ? response.data : [])
+      setDados(Array.isArray(dadosCache) ? (dadosCache as Pi[]) : [])
     } catch (error) {
       console.error(error)
       setDados([])
@@ -543,10 +537,10 @@ export default function AdminAreaDetalhe() {
                                   key={mes.mes}
                                   type="button"
                                   onClick={() =>
-  navigate(
-    `/admin/mes/${mes.mes.replace("/", "-")}?area=${areaAtual}`
-  )
-}
+                                    navigate(
+                                      `/admin/mes/${mes.mes.replace("/", "-")}?area=${areaAtual}`
+                                    )
+                                  }
                                   className="w-full rounded-xl border border-zinc-200 bg-white p-3 text-left transition hover:border-red-300 hover:bg-red-50"
                                 >
                                   <strong className="block text-sm font-black text-zinc-950">

@@ -6,6 +6,8 @@ export const api = axios.create({
     "https://desempenhocomercial.duckdns.org",
 })
 
+let pisCache: unknown[] | null = null
+
 export function getToken() {
   return localStorage.getItem("token")
 }
@@ -16,6 +18,7 @@ export function setToken(token: string) {
 
 export function clearToken() {
   localStorage.removeItem("token")
+  limparPisCache()
 }
 
 export function getUser() {
@@ -30,4 +33,27 @@ export function setUser(user: unknown) {
 
 export function clearUser() {
   localStorage.removeItem("usuario")
+  limparPisCache()
+}
+
+export async function getPisCached() {
+  if (pisCache) {
+    return pisCache
+  }
+
+  const token = getToken()
+
+  const response = await api.get("/api/pis", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  pisCache = Array.isArray(response.data) ? response.data : []
+
+  return pisCache
+}
+
+export function limparPisCache() {
+  pisCache = null
 }

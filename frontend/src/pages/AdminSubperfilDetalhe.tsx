@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
-import { api, getToken } from "../services/api"
+import { getPisCached } from "../services/api"
 
 type Pi = {
   pi_matriz?: string
@@ -124,15 +124,9 @@ export default function AdminSubperfilDetalhe() {
     try {
       setLoading(true)
 
-      const token = getToken()
+      const dadosCache = await getPisCached()
 
-      const response = await api.get("/api/pis", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      setDados(Array.isArray(response.data) ? response.data : [])
+      setDados(Array.isArray(dadosCache) ? (dadosCache as Pi[]) : [])
     } catch (error) {
       console.error(error)
       setDados([])

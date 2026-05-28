@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { api, getToken } from "../services/api"
+import { getPisCached } from "../services/api"
 
 type Pi = {
   pi_matriz?: string
@@ -194,15 +194,9 @@ export default function VendasDoDia() {
     try {
       setLoading(true)
 
-      const token = getToken()
+      const dadosCache = await getPisCached()
 
-      const response = await api.get("/api/pis", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      setDados(Array.isArray(response.data) ? response.data : [])
+      setDados(Array.isArray(dadosCache) ? (dadosCache as Pi[]) : [])
     } catch (error) {
       console.error(error)
       setDados([])
@@ -217,11 +211,7 @@ export default function VendasDoDia() {
 
   const mesesDisponiveis = useMemo(() => {
     return Array.from(
-      new Set(
-        dados
-          .map((item) => item.mes_venda)
-          .filter(Boolean)
-      )
+      new Set(dados.map((item) => item.mes_venda).filter(Boolean))
     ).sort((a, b) => {
       const [mesA, anoA] = String(a).split("/")
       const [mesB, anoB] = String(b).split("/")
@@ -300,17 +290,17 @@ export default function VendasDoDia() {
   }, [vendasFiltradas])
 
   const perfisAnunciante = useMemo(() => {
-  return ordenarPerfis(
-    agrupar(
-      vendasFiltradas,
-      (item) =>
-        item.sub_perfil_anunciante ||
-        item.perfil_anunciante ||
-        item.grupo ||
-        "Não informado"
+    return ordenarPerfis(
+      agrupar(
+        vendasFiltradas,
+        (item) =>
+          item.sub_perfil_anunciante ||
+          item.perfil_anunciante ||
+          item.grupo ||
+          "Não informado"
+      )
     )
-  )
-}, [vendasFiltradas])
+  }, [vendasFiltradas])
 
   function aplicarHoje() {
     const hoje = hojeISO()

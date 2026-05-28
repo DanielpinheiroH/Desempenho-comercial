@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 
-import { api, getToken } from "../services/api"
+import { api, getPisCached } from "../services/api"
 
 type Pi = {
   [key: string]: string | number | null | undefined
@@ -29,12 +29,16 @@ function money(value: number) {
   })
 }
 
-function normalizar(value?: string | null) {
+function normalizar(value?: string | number | null) {
   return String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .trim()
     .toLowerCase()
+    .trim()
+}
+
+function normalizarForte(value?: string | number | null) {
+  return normalizar(value).replace(/[^a-z0-9]/g, "")
 }
 
 function labelCampo(key: string) {
@@ -104,18 +108,12 @@ export default function DetalheMes() {
     try {
       setLoading(true)
 
-      const token = getToken()
-
-      const [pisResponse, metasResponse] = await Promise.all([
-        api.get("/api/pis", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
+      const [pis, metasResponse] = await Promise.all([
+        getPisCached(),
         api.get("/api/metas"),
       ])
 
-      setDados(Array.isArray(pisResponse.data) ? pisResponse.data : [])
+      setDados(Array.isArray(pis) ? (pis as Pi[]) : [])
       setMetas(Array.isArray(metasResponse.data) ? metasResponse.data : [])
     } catch (error) {
       console.error(error)
@@ -135,12 +133,12 @@ export default function DetalheMes() {
   }, [dados, mesUrl])
 
   const pisFiltrados = useMemo(() => {
-    const termo = normalizar(busca)
+    const termo = normalizarForte(busca)
 
     if (!termo) return pisDoMes
 
-    return pisDoMes.filter((item) =>
-      normalizar(
+    return pisDoMes.filter((item) => {
+      const texto = normalizarForte(
         [
           item.numero_pi,
           item.executivo,
@@ -149,8 +147,12 @@ export default function DetalheMes() {
           item.campanha,
           item.grupo,
         ].join(" ")
-      ).includes(termo)
-    )
+      )
+
+      const piLimpo = normalizarForte(item.numero_pi)
+
+      return texto.includes(termo) || piLimpo.includes(termo)
+    })
   }, [pisDoMes, busca])
 
   const executivoDoMes = pisDoMes[0]?.executivo || ""

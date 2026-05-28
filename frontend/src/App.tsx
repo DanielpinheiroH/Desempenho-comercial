@@ -15,15 +15,17 @@ import AdminSubperfilDetalhe from "./pages/AdminSubperfilDetalhe.tsx"
 import ExecutivoCarteira from "./pages/ExecutivoCarteira.tsx"
 import AnoListaDetalhePage from "./pages/admin/AnoListaDetalhePage.tsx"
 
-// NOVAS PÁGINAS
 import AnoDetalhePage from "./pages/admin/AnoDetalhePage.tsx"
 import MesDetalhePage from "./pages/admin/MesDetalhePage.tsx"
 import AdminSubperfilPisPage from "./pages/admin/AdminSubperfilPisPage.tsx"
 import AdminEntidadesPage from "./pages/admin/AdminEntidadesPage.tsx"
 import VendasDoDia from "./pages/VendasDoDia.tsx"
 
+import { getUser } from "./services/api"
+
 function App() {
   const token = localStorage.getItem("token")
+  const user = getUser()
 
   if (!token) {
     return (
@@ -36,67 +38,32 @@ function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        {/* DASHBOARD */}
         <Route path="/" element={<Dashboard />} />
-<Route path="/ano/:ano/:tipo" element={<AnoListaDetalhePage />} />
-<Route path="/admin/anunciantes" element={<AdminEntidadesPage tipo="anunciantes" />} />
-<Route path="/admin/agencias" element={<AdminEntidadesPage tipo="agencias" />} />
-<Route path="/vendas-do-dia" element={<VendasDoDia />} />
-        {/* BUSCA */}
-        <Route
-          path="/busca-pi"
-          element={<BuscaPI />}
-        />
 
-        {/* DETALHES ANTIGOS */}
-        <Route
-          path="/mes/:mes"
-          element={<DetalheMes />}
-        />
-
-        {/* NOVOS DETALHES ADMIN */}
-        <Route
-          path="/ano/:ano"
-          element={<AnoDetalhePage />}
-        />
+        <Route path="/ano/:ano/:tipo" element={<AnoListaDetalhePage />} />
+        <Route path="/admin/anunciantes" element={<AdminEntidadesPage tipo="anunciantes" />} />
+        <Route path="/admin/agencias" element={<AdminEntidadesPage tipo="agencias" />} />
 
         <Route
-          path="/admin/mes/:mes"
-          element={<MesDetalhePage />}
-        />
-        <Route
-  path="/admin/area/:area/:tipo"
-  element={<AdminAreaEntidadesPage />}
-/>
-
-        {/* ÁREAS */}
-        <Route
-          path="/admin/area/:area"
-          element={<AdminAreaDetalhe />}
+          path="/vendas-do-dia"
+          element={
+            user?.role === "admin" ? <VendasDoDia /> : <Navigate to="/" />
+          }
         />
 
-        <Route
-          path="/admin/subperfil/:subperfil"
-          element={<AdminSubperfilDetalhe />}
-        />
-<Route
-  path="/admin/subperfil/:subperfil/pis"
-  element={<AdminSubperfilPisPage />}
-/>
-        {/* EXECUTIVO */}
-        <Route
-          path="/executivo-carteira"
-          element={<ExecutivoCarteira />}
-        />
+        <Route path="/busca-pi" element={<BuscaPI />} />
+        <Route path="/mes/:mes" element={<DetalheMes />} />
+        <Route path="/ano/:ano" element={<AnoDetalhePage />} />
+        <Route path="/admin/mes/:mes" element={<MesDetalhePage />} />
+        <Route path="/admin/area/:area/:tipo" element={<AdminAreaEntidadesPage />} />
+        <Route path="/admin/area/:area" element={<AdminAreaDetalhe />} />
+        <Route path="/admin/subperfil/:subperfil" element={<AdminSubperfilDetalhe />} />
+        <Route path="/admin/subperfil/:subperfil/pis" element={<AdminSubperfilPisPage />} />
+        <Route path="/executivo-carteira" element={<ExecutivoCarteira />} />
       </Route>
 
-      {/* FALLBACK */}
-      <Route
-        path="*"
-        element={<Navigate to="/" />}
-      />
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
-    
   )
 }
 

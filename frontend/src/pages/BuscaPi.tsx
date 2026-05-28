@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { api, getToken } from "../services/api"
+import { getPisCached } from "../services/api"
 
 type Pi = {
   [key: string]: string | number | null | undefined
@@ -21,25 +21,27 @@ function money(value: number) {
   })
 }
 
-function normalizar(value?: string | null) {
+function normalizar(value?: string | number | null) {
   return String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .trim()
     .toLowerCase()
+    .trim()
+}
+
+function normalizarForte(value?: string | number | null) {
+  return normalizar(value).replace(/[^a-z0-9]/g, "")
 }
 
 function isAgenciaValida(value?: string | null) {
-  const texto = normalizar(value)
+  const texto = normalizarForte(value)
 
   return Boolean(
     texto &&
       texto !== "direto" &&
       texto !== "direta" &&
-      texto !== "sem agencia" &&
-      texto !== "sem agência" &&
-      texto !== "nao informado" &&
-      texto !== "não informado"
+      texto !== "semagencia" &&
+      texto !== "naoinformado"
   )
 }
 
@@ -71,25 +73,47 @@ function valorCampo(key: string, value: string | number | null | undefined) {
   return String(value || "-")
 }
 
+function textoBuscaPi(item: Pi) {
+  return normalizarForte(
+    [
+      item.numero_pi,
+      item.executivo,
+      item.anunciante,
+      item.agencia,
+      item.campanha,
+      item.grupo,
+      item.produto,
+      item.canal,
+      item.perfil_anunciante,
+      item.sub_perfil_anunciante,
+      item.mes_venda,
+    ].join(" ")
+  )
+}
+
+function piBateComBusca(numeroPi: string, termo: string) {
+  const piLimpo = normalizarForte(numeroPi)
+  const termoLimpo = normalizarForte(termo)
+
+  if (!termoLimpo) return true
+
+  return piLimpo.includes(termoLimpo)
+}
+
 export default function BuscaPI() {
   const [dados, setDados] = useState<Pi[]>([])
   const [busca, setBusca] = useState("")
   const [loading, setLoading] = useState(true)
   const [piSelecionado, setPiSelecionado] = useState<Pi | null>(null)
+  const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
 
   async function carregarDados() {
     try {
       setLoading(true)
 
-      const token = getToken()
+      const dadosCache = await getPisCached()
 
-      const response = await api.get("/api/pis", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      setDados(Array.isArray(response.data) ? response.data : [])
+      setDados(Array.isArray(dadosCache) ? (dadosCache as Pi[]) : [])
     } catch (error) {
       console.error(error)
       setDados([])
@@ -103,22 +127,31 @@ export default function BuscaPI() {
   }, [])
 
   const dadosFiltrados = useMemo(() => {
-    const termo = normalizar(busca)
+    const termo = normalizarForte(busca)
 
     if (!termo) return dados
 
-    return dados.filter((item) =>
-      normalizar(
-        [
-          item.numero_pi,
-          item.executivo,
-          item.anunciante,
-          item.agencia,
-          item.campanha,
-          item.grupo,
-        ].join(" ")
-      ).includes(termo)
-    )
+    return dados.filter((item) => {
+      const batePi = piBateComBusca(item.numero_pi, busca)
+      const bateTexto = textoBuscaPi(item).includes(termo)
+
+      return batePi || bateTexto
+    })
+  }, [dados, busca])
+
+  const sugestoes = useMemo(() => {
+    const termo = normalizarForte(busca)
+
+    if (!termo || termo.length < 2) return []
+
+    return dados
+      .filter((item) => {
+        const batePi = piBateComBusca(item.numero_pi, busca)
+        const bateTexto = textoBuscaPi(item).includes(termo)
+
+        return batePi || bateTexto
+      })
+      .slice(0, 8)
   }, [dados, busca])
 
   const totalLiquido = dadosFiltrados.reduce(
@@ -138,6 +171,12 @@ export default function BuscaPI() {
       .filter((agencia) => isAgenciaValida(agencia))
   ).size
 
+  function selecionarSugestao(item: Pi) {
+    setBusca(String(item.numero_pi || ""))
+    setPiSelecionado(item)
+    setMostrarSugestoes(false)
+  }
+
   return (
     <main className="space-y-6 text-zinc-950">
       <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
@@ -151,17 +190,57 @@ export default function BuscaPI() {
 
         <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
           Consulte PIs, campanhas, anunciantes, agências, grupos e executivos.
-          Clique em um PI para visualizar todas as informações.
+          A busca ignora pontos, traços, barras e acentos.
         </p>
       </section>
 
-      <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <section className="relative rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
         <input
           className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm outline-none placeholder:text-zinc-400 focus:border-red-500"
           placeholder="Buscar PI, cliente, campanha, agência, executivo..."
           value={busca}
-          onChange={(e) => setBusca(e.target.value)}
+          onChange={(e) => {
+            setBusca(e.target.value)
+            setMostrarSugestoes(true)
+          }}
+          onFocus={() => setMostrarSugestoes(true)}
         />
+
+        {mostrarSugestoes && sugestoes.length > 0 && (
+          <div className="absolute left-5 right-5 top-[76px] z-40 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl">
+            <div className="border-b border-zinc-100 px-4 py-2 text-xs font-black uppercase tracking-wide text-zinc-400">
+              Sugestões
+            </div>
+
+            {sugestoes.map((item, index) => (
+              <button
+                key={`${item.numero_pi}-${index}`}
+                type="button"
+                onClick={() => selecionarSugestao(item)}
+                className="flex w-full flex-col gap-1 border-b border-zinc-100 px-4 py-3 text-left transition hover:bg-red-50"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+                    PI {item.numero_pi}
+                  </span>
+
+                  <span className="text-xs font-semibold text-zinc-500">
+                    {item.mes_venda || "-"}
+                  </span>
+                </div>
+
+                <strong className="text-sm text-zinc-950">
+                  {item.anunciante || "-"}
+                </strong>
+
+                <small className="text-zinc-500">
+                  {item.executivo || "-"} • {item.agencia || "-"} •{" "}
+                  {money(Number(item.valor_liquido || 0))}
+                </small>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       {loading ? (
@@ -227,7 +306,10 @@ export default function BuscaPI() {
               {busca && (
                 <button
                   type="button"
-                  onClick={() => setBusca("")}
+                  onClick={() => {
+                    setBusca("")
+                    setMostrarSugestoes(false)
+                  }}
                   className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600"
                 >
                   Limpar busca
@@ -265,7 +347,10 @@ export default function BuscaPI() {
                       <tr
                         key={`${item.numero_pi}-${index}`}
                         className="cursor-pointer text-sm transition hover:bg-red-50"
-                        onClick={() => setPiSelecionado(item)}
+                        onClick={() => {
+                          setPiSelecionado(item)
+                          setMostrarSugestoes(false)
+                        }}
                       >
                         <td className="px-3 py-4 font-black text-red-600">
                           {item.numero_pi || "-"}
