@@ -14,6 +14,8 @@ type Pi = {
   valor_liquido: number
 }
 
+const ITENS_POR_PAGINA = 500
+
 function money(value: number) {
   return Number(value || 0).toLocaleString("pt-BR", {
     style: "currency",
@@ -106,6 +108,7 @@ export default function BuscaPI() {
   const [loading, setLoading] = useState(true)
   const [piSelecionado, setPiSelecionado] = useState<Pi | null>(null)
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
+  const [paginaAtual, setPaginaAtual] = useState(1)
 
   async function carregarDados() {
     try {
@@ -126,6 +129,10 @@ export default function BuscaPI() {
     carregarDados()
   }, [])
 
+  useEffect(() => {
+    setPaginaAtual(1)
+  }, [busca])
+
   const dadosFiltrados = useMemo(() => {
     const termo = normalizarForte(busca)
 
@@ -139,6 +146,18 @@ export default function BuscaPI() {
     })
   }, [dados, busca])
 
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(dadosFiltrados.length / ITENS_POR_PAGINA)
+  )
+
+  const dadosPaginados = useMemo(() => {
+    const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA
+    const fim = inicio + ITENS_POR_PAGINA
+
+    return dadosFiltrados.slice(inicio, fim)
+  }, [dadosFiltrados, paginaAtual])
+
   const sugestoes = useMemo(() => {
     const termo = normalizarForte(busca)
 
@@ -151,7 +170,7 @@ export default function BuscaPI() {
 
         return batePi || bateTexto
       })
-      .slice(0, 8)
+      .slice(0, 50)
   }, [dados, busca])
 
   const totalLiquido = dadosFiltrados.reduce(
@@ -171,10 +190,26 @@ export default function BuscaPI() {
       .filter((agencia) => isAgenciaValida(agencia))
   ).size
 
+  const inicioExibicao =
+    dadosFiltrados.length === 0 ? 0 : (paginaAtual - 1) * ITENS_POR_PAGINA + 1
+
+  const fimExibicao = Math.min(
+    paginaAtual * ITENS_POR_PAGINA,
+    dadosFiltrados.length
+  )
+
   function selecionarSugestao(item: Pi) {
     setBusca(String(item.numero_pi || ""))
     setPiSelecionado(item)
     setMostrarSugestoes(false)
+    setPaginaAtual(1)
+  }
+
+  function mudarPagina(novaPagina: number) {
+    const paginaSegura = Math.min(Math.max(novaPagina, 1), totalPaginas)
+
+    setPaginaAtual(paginaSegura)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   return (
@@ -212,33 +247,35 @@ export default function BuscaPI() {
               Sugestões
             </div>
 
-            {sugestoes.map((item, index) => (
-              <button
-                key={`${item.numero_pi}-${index}`}
-                type="button"
-                onClick={() => selecionarSugestao(item)}
-                className="flex w-full flex-col gap-1 border-b border-zinc-100 px-4 py-3 text-left transition hover:bg-red-50"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
-                    PI {item.numero_pi}
-                  </span>
+            <div className="max-h-80 overflow-y-auto">
+              {sugestoes.map((item, index) => (
+                <button
+                  key={`${item.numero_pi}-${index}`}
+                  type="button"
+                  onClick={() => selecionarSugestao(item)}
+                  className="flex w-full flex-col gap-1 border-b border-zinc-100 px-4 py-3 text-left transition hover:bg-red-50"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+                      PI {item.numero_pi}
+                    </span>
 
-                  <span className="text-xs font-semibold text-zinc-500">
-                    {item.mes_venda || "-"}
-                  </span>
-                </div>
+                    <span className="text-xs font-semibold text-zinc-500">
+                      {item.mes_venda || "-"}
+                    </span>
+                  </div>
 
-                <strong className="text-sm text-zinc-950">
-                  {item.anunciante || "-"}
-                </strong>
+                  <strong className="text-sm text-zinc-950">
+                    {item.anunciante || "-"}
+                  </strong>
 
-                <small className="text-zinc-500">
-                  {item.executivo || "-"} • {item.agencia || "-"} •{" "}
-                  {money(Number(item.valor_liquido || 0))}
-                </small>
-              </button>
-            ))}
+                  <small className="text-zinc-500">
+                    {item.executivo || "-"} • {item.agencia || "-"} •{" "}
+                    {money(Number(item.valor_liquido || 0))}
+                  </small>
+                </button>
+              ))}
+            </div>
           </div>
         )}
       </section>
@@ -299,22 +336,30 @@ export default function BuscaPI() {
                 </h2>
 
                 <p className="text-sm text-zinc-500">
-                  {dadosFiltrados.length} PIs encontrados.
+                  {dadosFiltrados.length} PIs encontrados. Exibindo{" "}
+                  {inicioExibicao} a {fimExibicao}.
                 </p>
               </div>
 
-              {busca && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBusca("")
-                    setMostrarSugestoes(false)
-                  }}
-                  className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600"
-                >
-                  Limpar busca
-                </button>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {busca && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBusca("")
+                      setMostrarSugestoes(false)
+                      setPaginaAtual(1)
+                    }}
+                    className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600"
+                  >
+                    Limpar busca
+                  </button>
+                )}
+
+                <div className="flex items-center gap-2 rounded-xl border border-zinc-200 px-3 py-2 text-sm font-bold text-zinc-600">
+                  Página {paginaAtual} de {totalPaginas}
+                </div>
+              </div>
             </div>
 
             {dadosFiltrados.length === 0 ? (
@@ -328,62 +373,109 @@ export default function BuscaPI() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px] border-collapse">
-                  <thead>
-                    <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-400">
-                      <th className="px-3 py-3">PI</th>
-                      <th className="px-3 py-3">Executivo</th>
-                      <th className="px-3 py-3">Anunciante</th>
-                      <th className="px-3 py-3">Agência</th>
-                      <th className="px-3 py-3">Campanha</th>
-                      <th className="px-3 py-3">Grupo</th>
-                      <th className="px-3 py-3 text-right">Valor líquido</th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="divide-y divide-zinc-100">
-                    {dadosFiltrados.map((item, index) => (
-                      <tr
-                        key={`${item.numero_pi}-${index}`}
-                        className="cursor-pointer text-sm transition hover:bg-red-50"
-                        onClick={() => {
-                          setPiSelecionado(item)
-                          setMostrarSugestoes(false)
-                        }}
-                      >
-                        <td className="px-3 py-4 font-black text-red-600">
-                          {item.numero_pi || "-"}
-                        </td>
-
-                        <td className="px-3 py-4 text-zinc-600">
-                          {item.executivo || "-"}
-                        </td>
-
-                        <td className="px-3 py-4 font-semibold text-zinc-800">
-                          {item.anunciante || "-"}
-                        </td>
-
-                        <td className="px-3 py-4 text-zinc-600">
-                          {item.agencia || "-"}
-                        </td>
-
-                        <td className="px-3 py-4 text-zinc-600">
-                          {item.campanha || "-"}
-                        </td>
-
-                        <td className="px-3 py-4 text-zinc-600">
-                          {item.grupo || "-"}
-                        </td>
-
-                        <td className="px-3 py-4 text-right font-black text-zinc-950">
-                          {money(Number(item.valor_liquido || 0))}
-                        </td>
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[980px] border-collapse">
+                    <thead>
+                      <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-400">
+                        <th className="px-3 py-3">PI</th>
+                        <th className="px-3 py-3">Executivo</th>
+                        <th className="px-3 py-3">Anunciante</th>
+                        <th className="px-3 py-3">Agência</th>
+                        <th className="px-3 py-3">Campanha</th>
+                        <th className="px-3 py-3">Grupo</th>
+                        <th className="px-3 py-3 text-right">Valor líquido</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+
+                    <tbody className="divide-y divide-zinc-100">
+                      {dadosPaginados.map((item, index) => (
+                        <tr
+                          key={`${item.numero_pi}-${paginaAtual}-${index}`}
+                          className="cursor-pointer text-sm transition hover:bg-red-50"
+                          onClick={() => {
+                            setPiSelecionado(item)
+                            setMostrarSugestoes(false)
+                          }}
+                        >
+                          <td className="px-3 py-4 font-black text-red-600">
+                            {item.numero_pi || "-"}
+                          </td>
+
+                          <td className="px-3 py-4 text-zinc-600">
+                            {item.executivo || "-"}
+                          </td>
+
+                          <td className="px-3 py-4 font-semibold text-zinc-800">
+                            {item.anunciante || "-"}
+                          </td>
+
+                          <td className="px-3 py-4 text-zinc-600">
+                            {item.agencia || "-"}
+                          </td>
+
+                          <td className="px-3 py-4 text-zinc-600">
+                            {item.campanha || "-"}
+                          </td>
+
+                          <td className="px-3 py-4 text-zinc-600">
+                            {item.grupo || "-"}
+                          </td>
+
+                          <td className="px-3 py-4 text-right font-black text-zinc-950">
+                            {money(Number(item.valor_liquido || 0))}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="mt-5 flex flex-col gap-3 border-t border-zinc-100 pt-5 md:flex-row md:items-center md:justify-between">
+                  <p className="text-sm font-semibold text-zinc-500">
+                    Mostrando {inicioExibicao} a {fimExibicao} de{" "}
+                    {dadosFiltrados.length} PIs.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      disabled={paginaAtual === 1}
+                      onClick={() => mudarPagina(1)}
+                      className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Primeira
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={paginaAtual === 1}
+                      onClick={() => mudarPagina(paginaAtual - 1)}
+                      className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Anterior
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={paginaAtual === totalPaginas}
+                      onClick={() => mudarPagina(paginaAtual + 1)}
+                      className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Próxima
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={paginaAtual === totalPaginas}
+                      onClick={() => mudarPagina(totalPaginas)}
+                      className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Última
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </section>
         </>
