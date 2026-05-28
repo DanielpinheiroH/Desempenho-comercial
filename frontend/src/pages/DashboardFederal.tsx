@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
-import { api, getPisCached } from "../services/api"
+import { getPisCached } from "../services/api"
 
 type Pi = {
   numero_pi: string
@@ -14,12 +14,6 @@ type Pi = {
   valor_liquido: number
 }
 
-type Meta = {
-  executivo: string
-  mes: string
-  meta: number
-}
-
 type MesResumo = {
   mes: string
   ano: string
@@ -27,14 +21,12 @@ type MesResumo = {
   total: number
   bruto: number
   quantidade: number
-  meta: number
 }
 
 type AnoResumo = {
   ano: string
   total: number
   bruto: number
-  meta: number
   quantidade: number
   meses: MesResumo[]
 }
@@ -76,42 +68,10 @@ function getMesNumero(mes: string) {
   return Number(mes?.split("/")[0] || 99)
 }
 
-function mesParaReferencia(mes: string) {
-  const mesNumero = getMesNumero(mes)
-  const ano = getAno(mes)
-
-  return Number(`${ano}${String(mesNumero).padStart(2, "0")}`)
-}
-
-function statusMeta(percentual: number) {
-  if (percentual >= 100) {
-    return {
-      label: "Bateu a meta",
-      className: "text-emerald-600",
-      bar: "bg-emerald-500",
-    }
-  }
-
-  if (percentual >= 50) {
-    return {
-      label: "Destravou",
-      className: "text-amber-600",
-      bar: "bg-amber-500",
-    }
-  }
-
-  return {
-    label: "Ainda não destravou",
-    className: "text-red-600",
-    bar: "bg-red-600",
-  }
-}
-
 export default function DashboardFederal() {
   const navigate = useNavigate()
 
   const [dados, setDados] = useState<Pi[]>([])
-  const [metas, setMetas] = useState<Meta[]>([])
   const [busca, setBusca] = useState("")
   const [loading, setLoading] = useState(true)
   const [anoAberto, setAnoAberto] = useState<string | null>(null)
@@ -120,17 +80,12 @@ export default function DashboardFederal() {
     try {
       setLoading(true)
 
-      const [pis, metasResponse] = await Promise.all([
-        getPisCached(),
-        api.get("/api/metas"),
-      ])
+      const pis = await getPisCached()
 
       setDados(Array.isArray(pis) ? (pis as Pi[]) : [])
-      setMetas(Array.isArray(metasResponse.data) ? metasResponse.data : [])
     } catch (error) {
       console.error(error)
       setDados([])
-      setMetas([])
     } finally {
       setLoading(false)
     }
@@ -163,12 +118,6 @@ export default function DashboardFederal() {
     )
   }, [dadosFederal, busca])
 
-  function metaDoMes(mes: string) {
-    return metas
-      .filter((meta) => meta.mes === mes)
-      .reduce((acc, meta) => acc + Number(meta.meta || 0), 0)
-  }
-
   const faturamentoPorMes = useMemo(() => {
     const mapa = new Map<string, MesResumo>()
 
@@ -182,7 +131,6 @@ export default function DashboardFederal() {
         total: 0,
         bruto: 0,
         quantidade: 0,
-        meta: 0,
       }
 
       atual.total += Number(item.valor_liquido || 0)
@@ -192,16 +140,11 @@ export default function DashboardFederal() {
       mapa.set(mes, atual)
     })
 
-    return Array.from(mapa.values())
-      .map((item) => ({
-        ...item,
-        meta: metaDoMes(item.mes),
-      }))
-      .sort((a, b) => {
-        if (a.ano !== b.ano) return Number(b.ano) - Number(a.ano)
-        return a.mesNumero - b.mesNumero
-      })
-  }, [dadosFiltrados, metas])
+    return Array.from(mapa.values()).sort((a, b) => {
+      if (a.ano !== b.ano) return Number(b.ano) - Number(a.ano)
+      return a.mesNumero - b.mesNumero
+    })
+  }, [dadosFiltrados])
 
   const faturamentoPorAno = useMemo(() => {
     const mapa = new Map<string, AnoResumo>()
@@ -211,14 +154,12 @@ export default function DashboardFederal() {
         ano: mes.ano,
         total: 0,
         bruto: 0,
-        meta: 0,
         quantidade: 0,
         meses: [],
       }
 
       atual.total += mes.total
       atual.bruto += mes.bruto
-      atual.meta += mes.meta
       atual.quantidade += mes.quantidade
       atual.meses.push(mes)
 
@@ -252,31 +193,6 @@ export default function DashboardFederal() {
       .map((item) => item.agencia)
       .filter((agencia) => isAgenciaValida(agencia))
   ).size
-
-  const mesesComMeta = faturamentoPorMes.filter(
-    (item) => Number(item.meta || 0) > 0
-  )
-
-  const primeiroMesComMeta = [...mesesComMeta].sort(
-    (a, b) => mesParaReferencia(a.mes) - mesParaReferencia(b.mes)
-  )[0]
-
-  const referenciaMeta = primeiroMesComMeta
-    ? mesParaReferencia(primeiroMesComMeta.mes)
-    : 0
-
-  const metaTotal = mesesComMeta.reduce(
-    (acc, item) => acc + Number(item.meta || 0),
-    0
-  )
-
-  const realizadoPeriodoMeta = dadosFiltrados
-    .filter((item) => mesParaReferencia(item.mes_venda) >= referenciaMeta)
-    .reduce((acc, item) => acc + Number(item.valor_liquido || 0), 0)
-
-  const temMeta = mesesComMeta.length > 0
-  const percentualMeta = temMeta ? (realizadoPeriodoMeta / metaTotal) * 100 : 0
-  const statusGeral = statusMeta(percentualMeta)
 
   const melhorAno = faturamentoPorAno[0]
   const melhorMes = [...faturamentoPorMes].sort((a, b) => b.total - a.total)[0]
@@ -409,42 +325,6 @@ export default function DashboardFederal() {
             </div>
           </section>
 
-          {temMeta && (
-            <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                <div>
-                  <h2 className="text-xl font-black text-zinc-950">
-                    Meta no período cadastrado
-                  </h2>
-
-                  <p className="mt-1 text-sm text-zinc-500">
-                    Comparação a partir de{" "}
-                    <strong className="text-zinc-800">
-                      {primeiroMesComMeta?.mes}
-                    </strong>
-                    : {money(realizadoPeriodoMeta)} realizado de{" "}
-                    {money(metaTotal)}.
-                  </p>
-                </div>
-
-                <strong
-                  className={`text-2xl font-black ${statusGeral.className}`}
-                >
-                  {percentualMeta.toFixed(1)}% • {statusGeral.label}
-                </strong>
-              </div>
-
-              <div className="h-3 overflow-hidden rounded-full bg-zinc-100">
-                <div
-                  className={`h-full rounded-full ${statusGeral.bar}`}
-                  style={{
-                    width: `${Math.min(percentualMeta, 100)}%`,
-                  }}
-                />
-              </div>
-            </section>
-          )}
-
           <section className="grid gap-6 xl:grid-cols-[1fr_320px]">
             <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
               <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
@@ -468,9 +348,6 @@ export default function DashboardFederal() {
                   </div>
                 ) : (
                   faturamentoPorAno.map((ano) => {
-                    const percent =
-                      ano.meta > 0 ? (ano.total / ano.meta) * 100 : 0
-                    const status = statusMeta(percent)
                     const aberto = anoAberto === ano.ano
 
                     return (
@@ -501,98 +378,41 @@ export default function DashboardFederal() {
                             <small className="text-xs text-zinc-500">
                               Bruto: {money(ano.bruto)}
                             </small>
-
-                            {ano.meta > 0 && (
-                              <small
-                                className={`block font-bold ${status.className}`}
-                              >
-                                {percent.toFixed(1)}% • {status.label}
-                              </small>
-                            )}
                           </div>
                         </button>
-
-                        {ano.meta > 0 && (
-                          <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200">
-                            <div
-                              className={`h-full rounded-full ${status.bar}`}
-                              style={{
-                                width: `${Math.min(percent, 100)}%`,
-                              }}
-                            />
-                          </div>
-                        )}
 
                         {aberto && (
                           <div className="mt-4 grid gap-3 md:grid-cols-2">
                             {ano.meses
                               .sort((a, b) => a.mesNumero - b.mesNumero)
-                              .map((item) => {
-                                const monthPercent =
-                                  item.meta > 0
-                                    ? (item.total / item.meta) * 100
-                                    : 0
+                              .map((item) => (
+                                <button
+                                  type="button"
+                                  className="rounded-2xl border border-zinc-200 bg-white p-4 text-left transition hover:border-red-300 hover:shadow-sm"
+                                  key={item.mes}
+                                  onClick={() => abrirMes(item.mes)}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                      <strong className="block text-lg font-black">
+                                        {item.mes}
+                                      </strong>
 
-                                const monthStatus = statusMeta(monthPercent)
-
-                                return (
-                                  <button
-                                    type="button"
-                                    className="rounded-2xl border border-zinc-200 bg-white p-4 text-left transition hover:border-red-300 hover:shadow-sm"
-                                    key={item.mes}
-                                    onClick={() => abrirMes(item.mes)}
-                                  >
-                                    <div className="flex items-start justify-between gap-3">
-                                      <div>
-                                        <strong className="block text-lg font-black">
-                                          {item.mes}
-                                        </strong>
-
-                                        <span className="text-sm text-zinc-500">
-                                          {item.quantidade} PIs
-                                        </span>
-                                      </div>
-
-                                      <b className="text-sm font-black">
-                                        {money(item.total)}
-                                      </b>
+                                      <span className="text-sm text-zinc-500">
+                                        {item.quantidade} PIs
+                                      </span>
                                     </div>
 
-                                    <small className="mt-1 block text-xs text-zinc-500">
-                                      Bruto: {money(item.bruto)}
-                                    </small>
+                                    <b className="text-sm font-black">
+                                      {money(item.total)}
+                                    </b>
+                                  </div>
 
-                                    {item.meta > 0 && (
-                                      <>
-                                        <div className="mt-3 flex flex-wrap justify-between gap-2 text-xs">
-                                          <span className="text-zinc-500">
-                                            Meta: {money(item.meta)}
-                                          </span>
-
-                                          <span
-                                            className={`font-bold ${monthStatus.className}`}
-                                          >
-                                            {monthPercent.toFixed(1)}% •{" "}
-                                            {monthStatus.label}
-                                          </span>
-                                        </div>
-
-                                        <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100">
-                                          <div
-                                            className={`h-full rounded-full ${monthStatus.bar}`}
-                                            style={{
-                                              width: `${Math.min(
-                                                monthPercent,
-                                                100
-                                              )}%`,
-                                            }}
-                                          />
-                                        </div>
-                                      </>
-                                    )}
-                                  </button>
-                                )
-                              })}
+                                  <small className="mt-1 block text-xs text-zinc-500">
+                                    Bruto: {money(item.bruto)}
+                                  </small>
+                                </button>
+                              ))}
                           </div>
                         )}
                       </div>
