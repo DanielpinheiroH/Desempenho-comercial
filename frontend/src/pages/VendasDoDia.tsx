@@ -198,7 +198,7 @@ export default function VendasDoDia() {
   const [dataFim, setDataFim] = useState(hojeISO())
   const [mesSelecionado, setMesSelecionado] = useState(mesAtualBR())
   const [busca, setBusca] = useState("")
-  const [piSelecionado, setPiSelecionado] = useState<Pi | null>(null)
+  const [piAberto, setPiAberto] = useState<string | null>(null)
 
   async function carregarDados() {
     try {
@@ -336,16 +336,17 @@ export default function VendasDoDia() {
     setModoFiltro("periodo")
     setDataInicio(hoje)
     setDataFim(hoje)
+    setPiAberto(null)
   }
 
   function aplicarMesAtual() {
     setModoFiltro("mes")
     setMesSelecionado(mesAtualBR())
+    setPiAberto(null)
   }
 
-  function selecionarPi(item: Pi) {
-    setPiSelecionado(item)
-    window.scrollTo({ top: 0, behavior: "smooth" })
+  function alternarPi(chave: string) {
+    setPiAberto((atual) => (atual === chave ? null : chave))
   }
 
   return (
@@ -370,7 +371,10 @@ export default function VendasDoDia() {
         <div className="mb-4 flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setModoFiltro("periodo")}
+            onClick={() => {
+              setModoFiltro("periodo")
+              setPiAberto(null)
+            }}
             className={`rounded-2xl px-4 py-2 text-sm font-black transition ${
               modoFiltro === "periodo"
                 ? "bg-red-600 text-white"
@@ -382,7 +386,10 @@ export default function VendasDoDia() {
 
           <button
             type="button"
-            onClick={() => setModoFiltro("mes")}
+            onClick={() => {
+              setModoFiltro("mes")
+              setPiAberto(null)
+            }}
             className={`rounded-2xl px-4 py-2 text-sm font-black transition ${
               modoFiltro === "mes"
                 ? "bg-red-600 text-white"
@@ -403,7 +410,10 @@ export default function VendasDoDia() {
               type="date"
               disabled={modoFiltro === "mes"}
               value={dataInicio}
-              onChange={(event) => setDataInicio(event.target.value)}
+              onChange={(event) => {
+                setDataInicio(event.target.value)
+                setPiAberto(null)
+              }}
               className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm font-semibold outline-none disabled:bg-zinc-100 disabled:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
             />
           </div>
@@ -417,7 +427,10 @@ export default function VendasDoDia() {
               type="date"
               disabled={modoFiltro === "mes"}
               value={dataFim}
-              onChange={(event) => setDataFim(event.target.value)}
+              onChange={(event) => {
+                setDataFim(event.target.value)
+                setPiAberto(null)
+              }}
               className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm font-semibold outline-none disabled:bg-zinc-100 disabled:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
             />
           </div>
@@ -433,6 +446,7 @@ export default function VendasDoDia() {
               onChange={(event) => {
                 setModoFiltro("mes")
                 setMesSelecionado(event.target.value)
+                setPiAberto(null)
               }}
               className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm font-semibold outline-none disabled:bg-zinc-100 disabled:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
             >
@@ -451,7 +465,10 @@ export default function VendasDoDia() {
 
             <input
               value={busca}
-              onChange={(event) => setBusca(event.target.value)}
+              onChange={(event) => {
+                setBusca(event.target.value)
+                setPiAberto(null)
+              }}
               placeholder="Buscar PI, executivo, anunciante, agência, setor..."
               className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm font-semibold outline-none placeholder:font-normal placeholder:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
             />
@@ -475,7 +492,10 @@ export default function VendasDoDia() {
 
           <button
             type="button"
-            onClick={() => setBusca("")}
+            onClick={() => {
+              setBusca("")
+              setPiAberto(null)
+            }}
             className="self-end rounded-2xl border border-zinc-200 px-5 py-3 text-sm font-black text-zinc-700 transition hover:border-red-500 hover:bg-red-50 hover:text-red-700"
           >
             Limpar
@@ -573,51 +593,6 @@ export default function VendasDoDia() {
         )}
       </section>
 
-      {piSelecionado && (
-        <section className="rounded-[2rem] border border-red-200 bg-white p-5 shadow-sm">
-          <div className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
-                PI selecionado
-              </span>
-
-              <h2 className="mt-3 text-3xl font-black text-zinc-950">
-                PI {piSelecionado.numero_pi}
-              </h2>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setPiSelecionado(null)}
-              className="rounded-xl border border-zinc-200 px-3 py-2 text-xs font-black text-zinc-600 transition hover:border-red-300 hover:bg-red-50 hover:text-red-700"
-            >
-              Fechar
-            </button>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <InfoCard label="PI Matriz" value={piSelecionado.pi_matriz} />
-            <InfoCard label="Número PI" value={piSelecionado.numero_pi} />
-            <InfoCard label="Data venda" value={piSelecionado.data_venda} />
-            <InfoCard label="Executivo" value={piSelecionado.executivo} />
-            <InfoCard label="Diretoria" value={piSelecionado.diretoria} />
-            <InfoCard label="Grupo" value={piSelecionado.grupo} />
-            <InfoCard label="Anunciante" value={piSelecionado.anunciante} />
-            <InfoCard label="Razão Social Anunciante" value={piSelecionado.razao_social_anunciante} />
-            <InfoCard label="CNPJ Anunciante" value={piSelecionado.cnpj_anunciante} />
-            <InfoCard label="Campanha" value={piSelecionado.campanha} />
-            <InfoCard label="Agência" value={piSelecionado.agencia} />
-            <InfoCard label="Canal" value={piSelecionado.canal} />
-            <InfoCard label="Perfil Anunciante" value={piSelecionado.perfil_anunciante} />
-            <InfoCard label="Sub Perfil Anunciante" value={piSelecionado.sub_perfil_anunciante} />
-            <InfoCard label="Produto" value={piSelecionado.produto} />
-            <InfoCard label="Valor bruto" value={money(piSelecionado.valor_bruto)} />
-            <InfoCard label="Valor líquido" value={money(piSelecionado.valor_liquido)} />
-            <InfoCard label="Vencimento" value={piSelecionado.vencimento} />
-          </div>
-        </section>
-      )}
-
       <section className="grid gap-6 xl:grid-cols-2">
         <ResumoCard title="Áreas comerciais" items={areas} />
         <ResumoCard title="Subperfis" items={subperfis} />
@@ -629,7 +604,7 @@ export default function VendasDoDia() {
             <h2 className="text-xl font-black">Lista de vendas</h2>
 
             <p className="text-sm text-zinc-500">
-              Clique em um PI para visualizar as informações completas.
+              Clique em um PI para abrir as informações completas logo abaixo.
             </p>
           </div>
 
@@ -645,49 +620,68 @@ export default function VendasDoDia() {
         ) : (
           <>
             <div className="space-y-3 md:hidden">
-              {vendasFiltradas.map((item, index) => (
-                <button
-                  key={`${item.numero_pi}-${index}`}
-                  type="button"
-                  onClick={() => selecionarPi(item)}
-                  className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-left shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
-                        PI {item.numero_pi}
-                      </span>
+              {vendasFiltradas.map((item, index) => {
+                const chavePi = `mobile-${item.numero_pi}-${index}`
+                const aberto = piAberto === chavePi
 
-                      <strong className="mt-3 block text-sm font-black text-zinc-950">
-                        {item.anunciante || "-"}
-                      </strong>
+                return (
+                  <div
+                    key={chavePi}
+                    className={`overflow-hidden rounded-2xl border shadow-sm ${
+                      aberto
+                        ? "border-red-200 bg-red-50"
+                        : "border-zinc-200 bg-zinc-50"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => alternarPi(chavePi)}
+                      className="w-full p-4 text-left"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+                            PI {item.numero_pi}
+                          </span>
 
-                      <p className="mt-1 text-xs font-semibold text-zinc-500">
-                        {item.executivo || "-"}
-                      </p>
-                    </div>
+                          <strong className="mt-3 block text-sm font-black text-zinc-950">
+                            {item.anunciante || "-"}
+                          </strong>
 
-                    <div className="text-right">
-                      <strong className="block text-sm font-black text-zinc-950">
-                        {money(item.valor_liquido)}
-                      </strong>
+                          <p className="mt-1 text-xs font-semibold text-zinc-500">
+                            {item.executivo || "-"}
+                          </p>
+                        </div>
 
-                      <small className="text-xs text-zinc-500">
-                        Bruto: {money(item.valor_bruto)}
-                      </small>
-                    </div>
+                        <div className="text-right">
+                          <strong className="block text-sm font-black text-zinc-950">
+                            {money(item.valor_liquido)}
+                          </strong>
+
+                          <small className="text-xs text-zinc-500">
+                            Bruto: {money(item.valor_bruto)}
+                          </small>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                        <MiniInfo label="Data" value={item.data_venda || "-"} />
+                        <MiniInfo label="Mês" value={item.mes_venda || "-"} />
+                        <MiniInfo label="Área" value={nomeArea(classificarArea(item))} />
+                        <MiniInfo label="Perfil" value={item.perfil_anunciante || "-"} />
+                        <MiniInfo label="Subperfil" value={item.sub_perfil_anunciante || "-"} />
+                        <MiniInfo label="Agência" value={item.agencia || "-"} />
+                      </div>
+                    </button>
+
+                    {aberto && (
+                      <div className="border-t border-red-100 bg-white p-4">
+                        <PiDetalhes item={item} />
+                      </div>
+                    )}
                   </div>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                    <MiniInfo label="Data" value={item.data_venda || "-"} />
-                    <MiniInfo label="Mês" value={item.mes_venda || "-"} />
-                    <MiniInfo label="Área" value={nomeArea(classificarArea(item))} />
-                    <MiniInfo label="Perfil" value={item.perfil_anunciante || "-"} />
-                    <MiniInfo label="Subperfil" value={item.sub_perfil_anunciante || "-"} />
-                    <MiniInfo label="Agência" value={item.agencia || "-"} />
-                  </div>
-                </button>
-              ))}
+                )
+              })}
             </div>
 
             <div className="hidden overflow-auto md:block">
@@ -709,25 +703,52 @@ export default function VendasDoDia() {
                 </thead>
 
                 <tbody>
-                  {vendasFiltradas.map((item, index) => (
-                    <tr
-                      key={`${item.numero_pi}-${index}`}
-                      onClick={() => selecionarPi(item)}
-                      className="cursor-pointer border-b border-zinc-100 hover:bg-red-50"
-                    >
-                      <td className="px-3 py-3 font-black text-red-600">{item.numero_pi}</td>
-                      <td className="px-3 py-3">{item.data_venda || "-"}</td>
-                      <td className="px-3 py-3">{item.mes_venda || "-"}</td>
-                      <td className="px-3 py-3 font-semibold">{nomeArea(classificarArea(item))}</td>
-                      <td className="px-3 py-3">{item.perfil_anunciante || "-"}</td>
-                      <td className="px-3 py-3">{item.sub_perfil_anunciante || "-"}</td>
-                      <td className="px-3 py-3">{item.executivo}</td>
-                      <td className="px-3 py-3">{item.anunciante}</td>
-                      <td className="px-3 py-3">{item.agencia}</td>
-                      <td className="px-3 py-3 text-right font-black">{money(item.valor_liquido)}</td>
-                      <td className="px-3 py-3 text-right font-black text-zinc-600">{money(item.valor_bruto)}</td>
-                    </tr>
-                  ))}
+                  {vendasFiltradas.map((item, index) => {
+                    const chavePi = `desktop-${item.numero_pi}-${index}`
+                    const aberto = piAberto === chavePi
+
+                    return (
+                      <>
+                        <tr
+                          key={`${chavePi}-linha`}
+                          className={
+                            aberto
+                              ? "border-b border-red-100 bg-red-50"
+                              : "border-b border-zinc-100 hover:bg-red-50"
+                          }
+                        >
+                          <td className="px-3 py-3">
+                            <button
+                              type="button"
+                              onClick={() => alternarPi(chavePi)}
+                              className="rounded-lg px-2 py-1 font-black text-red-600 transition hover:bg-red-100 hover:text-red-700"
+                            >
+                              {item.numero_pi}
+                            </button>
+                          </td>
+
+                          <td className="px-3 py-3">{item.data_venda || "-"}</td>
+                          <td className="px-3 py-3">{item.mes_venda || "-"}</td>
+                          <td className="px-3 py-3 font-semibold">{nomeArea(classificarArea(item))}</td>
+                          <td className="px-3 py-3">{item.perfil_anunciante || "-"}</td>
+                          <td className="px-3 py-3">{item.sub_perfil_anunciante || "-"}</td>
+                          <td className="px-3 py-3">{item.executivo}</td>
+                          <td className="px-3 py-3">{item.anunciante}</td>
+                          <td className="px-3 py-3">{item.agencia}</td>
+                          <td className="px-3 py-3 text-right font-black">{money(item.valor_liquido)}</td>
+                          <td className="px-3 py-3 text-right font-black text-zinc-600">{money(item.valor_bruto)}</td>
+                        </tr>
+
+                        {aberto && (
+                          <tr key={`${chavePi}-detalhes`}>
+                            <td colSpan={11} className="bg-red-50 px-3 py-4">
+                              <PiDetalhes item={item} />
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -735,6 +756,71 @@ export default function VendasDoDia() {
         )}
       </section>
     </main>
+  )
+}
+
+function PiDetalhes({ item }: { item: Pi }) {
+  return (
+    <div className="rounded-2xl border border-red-100 bg-white p-4 shadow-sm">
+      <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <span className="text-xs font-black uppercase tracking-[0.16em] text-red-600">
+            Informações do PI
+          </span>
+
+          <h3 className="mt-1 text-xl font-black text-zinc-950">
+            PI {item.numero_pi || "-"}
+          </h3>
+        </div>
+
+        <span className="w-fit rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+          {nomeArea(classificarArea(item))}
+        </span>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <InfoCard label="PI Matriz" value={item.pi_matriz} />
+        <InfoCard label="Número PI" value={item.numero_pi} />
+        <InfoCard label="Data venda" value={item.data_venda} />
+        <InfoCard label="Mês venda" value={item.mes_venda} />
+        <InfoCard label="Executivo" value={item.executivo} />
+        <InfoCard label="Diretoria" value={item.diretoria} />
+        <InfoCard label="Grupo" value={item.grupo} />
+        <InfoCard label="Área" value={nomeArea(classificarArea(item))} />
+        <InfoCard label="Anunciante" value={item.anunciante} />
+        <InfoCard label="Razão Social Anunciante" value={item.razao_social_anunciante} />
+        <InfoCard label="CNPJ Anunciante" value={item.cnpj_anunciante} />
+        <InfoCard label="UF Cliente" value={item.uf_cliente} />
+        <InfoCard label="Campanha" value={item.campanha} />
+        <InfoCard label="Agência" value={item.agencia} />
+        <InfoCard label="Razão Social Agência" value={item.razao_social_agencia} />
+        <InfoCard label="CNPJ Agência" value={item.cnpj_agencia} />
+        <InfoCard label="UF Agência" value={item.uf_agencia} />
+        <InfoCard label="Canal" value={item.canal} />
+        <InfoCard label="Perfil Anunciante" value={item.perfil_anunciante} />
+        <InfoCard label="Sub Perfil Anunciante" value={item.sub_perfil_anunciante} />
+        <InfoCard label="Produto" value={item.produto} />
+        <InfoCard label="Data inicial veiculação" value={item.data_inicial_veiculacao} />
+        <InfoCard label="Data final veiculação" value={item.data_final_veiculacao} />
+        <InfoCard label="Mês inicial veiculação" value={item.mes_inicial_veiculacao} />
+        <InfoCard label="Valor bruto" value={money(item.valor_bruto)} />
+        <InfoCard label="Valor líquido" value={money(item.valor_liquido)} />
+        <InfoCard label="Vencimento" value={item.vencimento} />
+        <InfoCard label="Emissão/recebimento PI" value={item.data_emissao_recebimento_pi} />
+      </div>
+
+      {item.observacoes && (
+        <div className="mt-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+          <span className="block text-xs font-black uppercase tracking-wide text-zinc-500">
+            Observações
+          </span>
+
+          <p className="mt-2 whitespace-pre-wrap text-sm font-semibold text-zinc-800">
+            {item.observacoes}
+          </p>
+        </div>
+      )}
+    </div>
   )
 }
 

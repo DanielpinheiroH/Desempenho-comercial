@@ -113,13 +113,7 @@ function agruparEntidades(
 }
 
 function clientesUnicos(itens: Pi[]) {
-  return Array.from(
-    new Set(
-      itens
-        .map((pi) => pi.anunciante)
-        .filter(Boolean)
-    )
-  )
+  return Array.from(new Set(itens.map((pi) => pi.anunciante).filter(Boolean)))
 }
 
 export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
@@ -130,6 +124,7 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
   const [busca, setBusca] = useState("")
   const [tipoSelecionado, setTipoSelecionado] = useState<EntidadeTipo>(tipo)
   const [entidadeAberta, setEntidadeAberta] = useState<string | null>(null)
+  const [piAberto, setPiAberto] = useState<string | null>(null)
 
   async function carregarDados() {
     try {
@@ -204,6 +199,11 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
   function trocarTipo(tipoNovo: EntidadeTipo) {
     setTipoSelecionado(tipoNovo)
     setEntidadeAberta(null)
+    setPiAberto(null)
+  }
+
+  function alternarPi(chave: string) {
+    setPiAberto((atual) => (atual === chave ? null : chave))
   }
 
   return (
@@ -268,7 +268,10 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
 
           <input
             value={busca}
-            onChange={(event) => setBusca(event.target.value)}
+            onChange={(event) => {
+              setBusca(event.target.value)
+              setPiAberto(null)
+            }}
             className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm outline-none placeholder:text-zinc-400 focus:border-red-500"
             placeholder="Buscar PI, cliente, agência, executivo ou mês..."
           />
@@ -311,40 +314,60 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
                 </thead>
 
                 <tbody>
-                  {ultimosInvestimentos.map((pi, index) => (
-                    <tr
-                      key={`${pi.numero_pi}-${index}`}
-                      className="border-b border-zinc-100 hover:bg-red-50"
-                    >
-                      <td className="px-4 py-3 font-black text-red-600">
-                        {pi.numero_pi}
-                      </td>
+                  {ultimosInvestimentos.map((pi, index) => {
+                    const chavePi = `ultimos-${pi.numero_pi}-${index}`
+                    const aberto = piAberto === chavePi
 
-                      <td className="px-4 py-3 text-zinc-500">
-                        {pi.mes_venda}
-                      </td>
+                    return (
+                      <>
+                        <tr
+                          key={`${chavePi}-linha`}
+                          className={
+                            aberto
+                              ? "border-b border-red-100 bg-red-50"
+                              : "border-b border-zinc-100 hover:bg-red-50"
+                          }
+                        >
+                          <td className="px-4 py-3">
+                            <button
+                              type="button"
+                              onClick={() => alternarPi(chavePi)}
+                              className="rounded-lg px-2 py-1 font-black text-red-600 transition hover:bg-red-100 hover:text-red-700"
+                              title="Clique para ver as informações do PI"
+                            >
+                              {pi.numero_pi}
+                            </button>
+                          </td>
 
-                      <td className="px-4 py-3 font-semibold text-zinc-800">
-                        {pi.anunciante || "-"}
-                      </td>
+                          <td className="px-4 py-3 text-zinc-500">
+                            {pi.mes_venda}
+                          </td>
 
-                      <td className="px-4 py-3 text-zinc-700">
-                        {pi.agencia || "-"}
-                      </td>
+                          <td className="px-4 py-3 font-semibold text-zinc-800">
+                            {pi.anunciante || "-"}
+                          </td>
 
-                      <td className="px-4 py-3 text-zinc-700">
-                        {pi.executivo || "-"}
-                      </td>
+                          <td className="px-4 py-3 text-zinc-700">
+                            {pi.agencia || "-"}
+                          </td>
 
-                      <td className="px-4 py-3 text-right font-black">
-                        {money(pi.valor_liquido)}
-                      </td>
+                          <td className="px-4 py-3 text-zinc-700">
+                            {pi.executivo || "-"}
+                          </td>
 
-                      <td className="px-4 py-3 text-right font-black text-zinc-600">
-                        {money(pi.valor_bruto)}
-                      </td>
-                    </tr>
-                  ))}
+                          <td className="px-4 py-3 text-right font-black">
+                            {money(pi.valor_liquido)}
+                          </td>
+
+                          <td className="px-4 py-3 text-right font-black text-zinc-600">
+                            {money(pi.valor_bruto)}
+                          </td>
+                        </tr>
+
+                        {aberto && <PiDetalhes pi={pi} colSpan={7} />}
+                      </>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -384,11 +407,12 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
                     >
                       <button
                         type="button"
-                        onClick={() =>
+                        onClick={() => {
                           setEntidadeAberta((atual) =>
                             atual === item.nome ? null : item.nome
                           )
-                        }
+                          setPiAberto(null)
+                        }}
                         className="flex w-full flex-col gap-3 p-5 text-left transition hover:bg-red-50 md:flex-row md:items-center md:justify-between"
                       >
                         <div className="min-w-0">
@@ -428,10 +452,22 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
                       {aberto && tipoSelecionado === "agencias" && (
                         <div className="border-t border-zinc-200 bg-white p-5">
                           <div className="grid gap-4 md:grid-cols-4">
-                            <ResumoCard titulo="Trouxe líquido" valor={money(item.total)} />
-                            <ResumoCard titulo="Trouxe bruto" valor={money(item.bruto)} />
-                            <ResumoCard titulo="PIs" valor={String(item.quantidade)} />
-                            <ResumoCard titulo="Clientes" valor={String(clientes.length)} />
+                            <ResumoCard
+                              titulo="Trouxe líquido"
+                              valor={money(item.total)}
+                            />
+                            <ResumoCard
+                              titulo="Trouxe bruto"
+                              valor={money(item.bruto)}
+                            />
+                            <ResumoCard
+                              titulo="PIs"
+                              valor={String(item.quantidade)}
+                            />
+                            <ResumoCard
+                              titulo="Clientes"
+                              valor={String(clientes.length)}
+                            />
                           </div>
 
                           <div className="mt-6 grid gap-6 xl:grid-cols-[320px_1fr]">
@@ -441,14 +477,16 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
                               </h3>
 
                               <div className="mt-4 space-y-2">
-                                {clientes.slice(0, 20).map((cliente, clienteIndex) => (
-                                  <div
-                                    key={`${cliente}-${clienteIndex}`}
-                                    className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-700"
-                                  >
-                                    {cliente}
-                                  </div>
-                                ))}
+                                {clientes
+                                  .slice(0, 20)
+                                  .map((cliente, clienteIndex) => (
+                                    <div
+                                      key={`${cliente}-${clienteIndex}`}
+                                      className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-semibold text-zinc-700"
+                                    >
+                                      {cliente}
+                                    </div>
+                                  ))}
                               </div>
                             </div>
 
@@ -478,32 +516,59 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
                                   </thead>
 
                                   <tbody>
-                                    {item.itens.slice(0, 30).map((pi, piIndex) => (
-                                      <tr
-                                        key={`${pi.numero_pi}-${piIndex}`}
-                                        className="border-b border-zinc-100 hover:bg-red-50"
-                                      >
-                                        <td className="px-4 py-3 font-black text-red-600">
-                                          {pi.numero_pi}
-                                        </td>
+                                    {item.itens
+                                      .slice(0, 30)
+                                      .map((pi, piIndex) => {
+                                        const chavePi = `agencia-${item.nome}-${pi.numero_pi}-${piIndex}`
+                                        const piEstaAberto =
+                                          piAberto === chavePi
 
-                                        <td className="px-4 py-3 font-semibold text-zinc-800">
-                                          {pi.anunciante || "-"}
-                                        </td>
+                                        return (
+                                          <>
+                                            <tr
+                                              key={`${chavePi}-linha`}
+                                              className={
+                                                piEstaAberto
+                                                  ? "border-b border-red-100 bg-red-50"
+                                                  : "border-b border-zinc-100 hover:bg-red-50"
+                                              }
+                                            >
+                                              <td className="px-4 py-3">
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    alternarPi(chavePi)
+                                                  }
+                                                  className="rounded-lg px-2 py-1 font-black text-red-600 transition hover:bg-red-100 hover:text-red-700"
+                                                  title="Clique para ver as informações do PI"
+                                                >
+                                                  {pi.numero_pi}
+                                                </button>
+                                              </td>
 
-                                        <td className="px-4 py-3 text-zinc-600">
-                                          {pi.mes_venda}
-                                        </td>
+                                              <td className="px-4 py-3 font-semibold text-zinc-800">
+                                                {pi.anunciante || "-"}
+                                              </td>
 
-                                        <td className="px-4 py-3 text-zinc-600">
-                                          {pi.executivo || "-"}
-                                        </td>
+                                              <td className="px-4 py-3 text-zinc-600">
+                                                {pi.mes_venda}
+                                              </td>
 
-                                        <td className="px-4 py-3 text-right font-black">
-                                          {money(pi.valor_liquido)}
-                                        </td>
-                                      </tr>
-                                    ))}
+                                              <td className="px-4 py-3 text-zinc-600">
+                                                {pi.executivo || "-"}
+                                              </td>
+
+                                              <td className="px-4 py-3 text-right font-black">
+                                                {money(pi.valor_liquido)}
+                                              </td>
+                                            </tr>
+
+                                            {piEstaAberto && (
+                                              <PiDetalhes pi={pi} colSpan={5} />
+                                            )}
+                                          </>
+                                        )
+                                      })}
                                   </tbody>
                                 </table>
                               </div>
@@ -533,40 +598,62 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
                               </thead>
 
                               <tbody>
-                                {item.itens.map((pi, piIndex) => (
-                                  <tr
-                                    key={`${pi.numero_pi}-${piIndex}`}
-                                    className="border-b border-zinc-100 hover:bg-red-50"
-                                  >
-                                    <td className="px-4 py-3 font-black text-red-600">
-                                      {pi.numero_pi}
-                                    </td>
+                                {item.itens.map((pi, piIndex) => {
+                                  const chavePi = `cliente-${item.nome}-${pi.numero_pi}-${piIndex}`
+                                  const piEstaAberto = piAberto === chavePi
 
-                                    <td className="px-4 py-3 text-zinc-500">
-                                      {pi.mes_venda}
-                                    </td>
+                                  return (
+                                    <>
+                                      <tr
+                                        key={`${chavePi}-linha`}
+                                        className={
+                                          piEstaAberto
+                                            ? "border-b border-red-100 bg-red-50"
+                                            : "border-b border-zinc-100 hover:bg-red-50"
+                                        }
+                                      >
+                                        <td className="px-4 py-3">
+                                          <button
+                                            type="button"
+                                            onClick={() => alternarPi(chavePi)}
+                                            className="rounded-lg px-2 py-1 font-black text-red-600 transition hover:bg-red-100 hover:text-red-700"
+                                            title="Clique para ver as informações do PI"
+                                          >
+                                            {pi.numero_pi}
+                                          </button>
+                                        </td>
 
-                                    <td className="px-4 py-3 text-zinc-700">
-                                      {pi.anunciante || "-"}
-                                    </td>
+                                        <td className="px-4 py-3 text-zinc-500">
+                                          {pi.mes_venda}
+                                        </td>
 
-                                    <td className="px-4 py-3 text-zinc-700">
-                                      {pi.agencia || "-"}
-                                    </td>
+                                        <td className="px-4 py-3 text-zinc-700">
+                                          {pi.anunciante || "-"}
+                                        </td>
 
-                                    <td className="px-4 py-3 text-zinc-700">
-                                      {pi.executivo || "-"}
-                                    </td>
+                                        <td className="px-4 py-3 text-zinc-700">
+                                          {pi.agencia || "-"}
+                                        </td>
 
-                                    <td className="px-4 py-3 text-right font-black">
-                                      {money(pi.valor_liquido)}
-                                    </td>
+                                        <td className="px-4 py-3 text-zinc-700">
+                                          {pi.executivo || "-"}
+                                        </td>
 
-                                    <td className="px-4 py-3 text-right font-black text-zinc-600">
-                                      {money(pi.valor_bruto)}
-                                    </td>
-                                  </tr>
-                                ))}
+                                        <td className="px-4 py-3 text-right font-black">
+                                          {money(pi.valor_liquido)}
+                                        </td>
+
+                                        <td className="px-4 py-3 text-right font-black text-zinc-600">
+                                          {money(pi.valor_bruto)}
+                                        </td>
+                                      </tr>
+
+                                      {piEstaAberto && (
+                                        <PiDetalhes pi={pi} colSpan={7} />
+                                      )}
+                                    </>
+                                  )
+                                })}
                               </tbody>
                             </table>
                           </div>
@@ -581,6 +668,43 @@ export default function FederalEntidadesPage({ tipo = "anunciantes" }: Props) {
         </>
       )}
     </main>
+  )
+}
+
+function PiDetalhes({ pi, colSpan }: { pi: Pi; colSpan: number }) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="bg-red-50 px-4 py-4">
+        <div className="rounded-2xl border border-red-100 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+            <div>
+              <span className="text-xs font-black uppercase tracking-[0.16em] text-red-600">
+                Informações do PI
+              </span>
+
+              <h3 className="mt-1 text-xl font-black text-zinc-950">
+                PI {pi.numero_pi || "-"}
+              </h3>
+            </div>
+
+            <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+              {pi.grupo || "-"}
+            </span>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <ResumoCard titulo="Mês da venda" valor={pi.mes_venda || "-"} />
+            <ResumoCard titulo="Executivo" valor={pi.executivo || "-"} />
+            <ResumoCard titulo="Grupo" valor={pi.grupo || "-"} />
+            <ResumoCard titulo="Cliente" valor={pi.anunciante || "-"} />
+            <ResumoCard titulo="Agência" valor={pi.agencia || "-"} />
+            <ResumoCard titulo="PI" valor={pi.numero_pi || "-"} />
+            <ResumoCard titulo="Valor líquido" valor={money(pi.valor_liquido)} />
+            <ResumoCard titulo="Valor bruto" valor={money(pi.valor_bruto)} />
+          </div>
+        </div>
+      </td>
+    </tr>
   )
 }
 

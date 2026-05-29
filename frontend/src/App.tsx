@@ -24,9 +24,26 @@ import FederalEntidadesPage from "./pages/FederalEntidadesPage.tsx"
 
 import { getUser } from "./services/api"
 
+function normalizar(value?: string | null) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+}
+
 function App() {
   const token = localStorage.getItem("token")
   const user = getUser()
+
+  const grupos = Array.isArray(user?.grupos)
+    ? user.grupos.map((grupo: string) => normalizar(grupo))
+    : []
+
+  const podeVerVendasDoDia =
+    user?.role === "admin" ||
+    grupos.includes("federal") ||
+    grupos.includes("estadual")
 
   if (!token) {
     return (
@@ -42,32 +59,56 @@ function App() {
         <Route path="/" element={<Dashboard />} />
 
         <Route path="/ano/:ano/:tipo" element={<AnoListaDetalhePage />} />
-        <Route path="/admin/anunciantes" element={<AdminEntidadesPage tipo="anunciantes" />} />
-        <Route path="/admin/agencias" element={<AdminEntidadesPage tipo="agencias" />} />
+
+        <Route
+          path="/admin/anunciantes"
+          element={<AdminEntidadesPage tipo="anunciantes" />}
+        />
+
+        <Route
+          path="/admin/agencias"
+          element={<AdminEntidadesPage tipo="agencias" />}
+        />
 
         <Route
           path="/vendas-do-dia"
           element={
-            user?.role === "admin" ? <VendasDoDia /> : <Navigate to="/" />
+            podeVerVendasDoDia ? <VendasDoDia /> : <Navigate to="/" />
           }
         />
-<Route
-  path="/federal/anunciantes"
-  element={<FederalEntidadesPage tipo="anunciantes" />}
-/>
 
-<Route
-  path="/federal/agencias"
-  element={<FederalEntidadesPage tipo="agencias" />}
-/>
+        <Route
+          path="/federal/anunciantes"
+          element={<FederalEntidadesPage tipo="anunciantes" />}
+        />
+
+        <Route
+          path="/federal/agencias"
+          element={<FederalEntidadesPage tipo="agencias" />}
+        />
+
         <Route path="/busca-pi" element={<BuscaPI />} />
         <Route path="/mes/:mes" element={<DetalheMes />} />
         <Route path="/ano/:ano" element={<AnoDetalhePage />} />
         <Route path="/admin/mes/:mes" element={<MesDetalhePage />} />
-        <Route path="/admin/area/:area/:tipo" element={<AdminAreaEntidadesPage />} />
+
+        <Route
+          path="/admin/area/:area/:tipo"
+          element={<AdminAreaEntidadesPage />}
+        />
+
         <Route path="/admin/area/:area" element={<AdminAreaDetalhe />} />
-        <Route path="/admin/subperfil/:subperfil" element={<AdminSubperfilDetalhe />} />
-        <Route path="/admin/subperfil/:subperfil/pis" element={<AdminSubperfilPisPage />} />
+
+        <Route
+          path="/admin/subperfil/:subperfil"
+          element={<AdminSubperfilDetalhe />}
+        />
+
+        <Route
+          path="/admin/subperfil/:subperfil/pis"
+          element={<AdminSubperfilPisPage />}
+        />
+
         <Route path="/executivo-carteira" element={<ExecutivoCarteira />} />
       </Route>
 
