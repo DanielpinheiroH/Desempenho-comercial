@@ -198,7 +198,7 @@ export default function VendasDoDia() {
   const [dataFim, setDataFim] = useState(hojeISO())
   const [mesSelecionado, setMesSelecionado] = useState(mesAtualBR())
   const [busca, setBusca] = useState("")
-  const [piAberto, setPiAberto] = useState<string | null>(null)
+  const [piSelecionado, setPiSelecionado] = useState<Pi | null>(null)
 
   async function carregarDados() {
     try {
@@ -336,17 +336,17 @@ export default function VendasDoDia() {
     setModoFiltro("periodo")
     setDataInicio(hoje)
     setDataFim(hoje)
-    setPiAberto(null)
+    setPiSelecionado(null)
   }
 
   function aplicarMesAtual() {
     setModoFiltro("mes")
     setMesSelecionado(mesAtualBR())
-    setPiAberto(null)
+    setPiSelecionado(null)
   }
 
-  function alternarPi(chave: string) {
-    setPiAberto((atual) => (atual === chave ? null : chave))
+  function selecionarPi(item: Pi) {
+    setPiSelecionado(item)
   }
 
   return (
@@ -373,7 +373,7 @@ export default function VendasDoDia() {
             type="button"
             onClick={() => {
               setModoFiltro("periodo")
-              setPiAberto(null)
+              setPiSelecionado(null)
             }}
             className={`rounded-2xl px-4 py-2 text-sm font-black transition ${
               modoFiltro === "periodo"
@@ -388,7 +388,7 @@ export default function VendasDoDia() {
             type="button"
             onClick={() => {
               setModoFiltro("mes")
-              setPiAberto(null)
+              setPiSelecionado(null)
             }}
             className={`rounded-2xl px-4 py-2 text-sm font-black transition ${
               modoFiltro === "mes"
@@ -412,7 +412,7 @@ export default function VendasDoDia() {
               value={dataInicio}
               onChange={(event) => {
                 setDataInicio(event.target.value)
-                setPiAberto(null)
+                setPiSelecionado(null)
               }}
               className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm font-semibold outline-none disabled:bg-zinc-100 disabled:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
             />
@@ -429,7 +429,7 @@ export default function VendasDoDia() {
               value={dataFim}
               onChange={(event) => {
                 setDataFim(event.target.value)
-                setPiAberto(null)
+                setPiSelecionado(null)
               }}
               className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm font-semibold outline-none disabled:bg-zinc-100 disabled:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
             />
@@ -446,7 +446,7 @@ export default function VendasDoDia() {
               onChange={(event) => {
                 setModoFiltro("mes")
                 setMesSelecionado(event.target.value)
-                setPiAberto(null)
+                setPiSelecionado(null)
               }}
               className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm font-semibold outline-none disabled:bg-zinc-100 disabled:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
             >
@@ -467,7 +467,7 @@ export default function VendasDoDia() {
               value={busca}
               onChange={(event) => {
                 setBusca(event.target.value)
-                setPiAberto(null)
+                setPiSelecionado(null)
               }}
               placeholder="Buscar PI, executivo, anunciante, agência, setor..."
               className="h-12 w-full rounded-2xl border border-zinc-200 px-4 text-sm font-semibold outline-none placeholder:font-normal placeholder:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
@@ -494,7 +494,7 @@ export default function VendasDoDia() {
             type="button"
             onClick={() => {
               setBusca("")
-              setPiAberto(null)
+              setPiSelecionado(null)
             }}
             className="self-end rounded-2xl border border-zinc-200 px-5 py-3 text-sm font-black text-zinc-700 transition hover:border-red-500 hover:bg-red-50 hover:text-red-700"
           >
@@ -604,7 +604,7 @@ export default function VendasDoDia() {
             <h2 className="text-xl font-black">Lista de vendas</h2>
 
             <p className="text-sm text-zinc-500">
-              Clique em um PI para abrir as informações completas logo abaixo.
+              Clique em qualquer lugar da linha para abrir o modal do PI.
             </p>
           </div>
 
@@ -620,68 +620,49 @@ export default function VendasDoDia() {
         ) : (
           <>
             <div className="space-y-3 md:hidden">
-              {vendasFiltradas.map((item, index) => {
-                const chavePi = `mobile-${item.numero_pi}-${index}`
-                const aberto = piAberto === chavePi
+              {vendasFiltradas.map((item, index) => (
+                <button
+                  key={`${item.numero_pi}-${index}`}
+                  type="button"
+                  onClick={() => selecionarPi(item)}
+                  className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-left shadow-sm transition hover:border-red-300 hover:bg-red-50"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+                        PI {item.numero_pi}
+                      </span>
 
-                return (
-                  <div
-                    key={chavePi}
-                    className={`overflow-hidden rounded-2xl border shadow-sm ${
-                      aberto
-                        ? "border-red-200 bg-red-50"
-                        : "border-zinc-200 bg-zinc-50"
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => alternarPi(chavePi)}
-                      className="w-full p-4 text-left"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
-                            PI {item.numero_pi}
-                          </span>
+                      <strong className="mt-3 block text-sm font-black text-zinc-950">
+                        {item.anunciante || "-"}
+                      </strong>
 
-                          <strong className="mt-3 block text-sm font-black text-zinc-950">
-                            {item.anunciante || "-"}
-                          </strong>
+                      <p className="mt-1 text-xs font-semibold text-zinc-500">
+                        {item.executivo || "-"}
+                      </p>
+                    </div>
 
-                          <p className="mt-1 text-xs font-semibold text-zinc-500">
-                            {item.executivo || "-"}
-                          </p>
-                        </div>
+                    <div className="text-right">
+                      <strong className="block text-sm font-black text-zinc-950">
+                        {money(item.valor_liquido)}
+                      </strong>
 
-                        <div className="text-right">
-                          <strong className="block text-sm font-black text-zinc-950">
-                            {money(item.valor_liquido)}
-                          </strong>
-
-                          <small className="text-xs text-zinc-500">
-                            Bruto: {money(item.valor_bruto)}
-                          </small>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                        <MiniInfo label="Data" value={item.data_venda || "-"} />
-                        <MiniInfo label="Mês" value={item.mes_venda || "-"} />
-                        <MiniInfo label="Área" value={nomeArea(classificarArea(item))} />
-                        <MiniInfo label="Perfil" value={item.perfil_anunciante || "-"} />
-                        <MiniInfo label="Subperfil" value={item.sub_perfil_anunciante || "-"} />
-                        <MiniInfo label="Agência" value={item.agencia || "-"} />
-                      </div>
-                    </button>
-
-                    {aberto && (
-                      <div className="border-t border-red-100 bg-white p-4">
-                        <PiDetalhes item={item} />
-                      </div>
-                    )}
+                      <small className="text-xs text-zinc-500">
+                        Bruto: {money(item.valor_bruto)}
+                      </small>
+                    </div>
                   </div>
-                )
-              })}
+
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                    <MiniInfo label="Data" value={item.data_venda || "-"} />
+                    <MiniInfo label="Mês" value={item.mes_venda || "-"} />
+                    <MiniInfo label="Área" value={nomeArea(classificarArea(item))} />
+                    <MiniInfo label="Perfil" value={item.perfil_anunciante || "-"} />
+                    <MiniInfo label="Subperfil" value={item.sub_perfil_anunciante || "-"} />
+                    <MiniInfo label="Agência" value={item.agencia || "-"} />
+                  </div>
+                </button>
+              ))}
             </div>
 
             <div className="hidden overflow-auto md:block">
@@ -703,81 +684,140 @@ export default function VendasDoDia() {
                 </thead>
 
                 <tbody>
-                  {vendasFiltradas.map((item, index) => {
-                    const chavePi = `desktop-${item.numero_pi}-${index}`
-                    const aberto = piAberto === chavePi
+                  {vendasFiltradas.map((item, index) => (
+                    <tr
+                      key={`${item.numero_pi}-${index}`}
+                      onClick={() => selecionarPi(item)}
+                      className="cursor-pointer border-b border-zinc-100 transition hover:bg-red-50"
+                    >
+                      <td className="px-3 py-3 font-black text-red-600">
+                        {item.numero_pi}
+                      </td>
 
-                    return (
-                      <>
-                        <tr
-                          key={`${chavePi}-linha`}
-                          className={
-                            aberto
-                              ? "border-b border-red-100 bg-red-50"
-                              : "border-b border-zinc-100 hover:bg-red-50"
-                          }
-                        >
-                          <td className="px-3 py-3">
-                            <button
-                              type="button"
-                              onClick={() => alternarPi(chavePi)}
-                              className="rounded-lg px-2 py-1 font-black text-red-600 transition hover:bg-red-100 hover:text-red-700"
-                            >
-                              {item.numero_pi}
-                            </button>
-                          </td>
+                      <td className="px-3 py-3">{item.data_venda || "-"}</td>
+                      <td className="px-3 py-3">{item.mes_venda || "-"}</td>
 
-                          <td className="px-3 py-3">{item.data_venda || "-"}</td>
-                          <td className="px-3 py-3">{item.mes_venda || "-"}</td>
-                          <td className="px-3 py-3 font-semibold">{nomeArea(classificarArea(item))}</td>
-                          <td className="px-3 py-3">{item.perfil_anunciante || "-"}</td>
-                          <td className="px-3 py-3">{item.sub_perfil_anunciante || "-"}</td>
-                          <td className="px-3 py-3">{item.executivo}</td>
-                          <td className="px-3 py-3">{item.anunciante}</td>
-                          <td className="px-3 py-3">{item.agencia}</td>
-                          <td className="px-3 py-3 text-right font-black">{money(item.valor_liquido)}</td>
-                          <td className="px-3 py-3 text-right font-black text-zinc-600">{money(item.valor_bruto)}</td>
-                        </tr>
+                      <td className="px-3 py-3 font-semibold">
+                        {nomeArea(classificarArea(item))}
+                      </td>
 
-                        {aberto && (
-                          <tr key={`${chavePi}-detalhes`}>
-                            <td colSpan={11} className="bg-red-50 px-3 py-4">
-                              <PiDetalhes item={item} />
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    )
-                  })}
+                      <td className="px-3 py-3">
+                        {item.perfil_anunciante || "-"}
+                      </td>
+
+                      <td className="px-3 py-3">
+                        {item.sub_perfil_anunciante || "-"}
+                      </td>
+
+                      <td className="px-3 py-3">{item.executivo}</td>
+                      <td className="px-3 py-3">{item.anunciante}</td>
+                      <td className="px-3 py-3">{item.agencia}</td>
+
+                      <td className="px-3 py-3 text-right font-black">
+                        {money(item.valor_liquido)}
+                      </td>
+
+                      <td className="px-3 py-3 text-right font-black text-zinc-600">
+                        {money(item.valor_bruto)}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </>
         )}
       </section>
+
+      {piSelecionado && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setPiSelecionado(null)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-3xl bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-zinc-200 p-6">
+              <div>
+                <span className="mb-2 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
+                  Detalhes do PI
+                </span>
+
+                <h2 className="text-2xl font-black text-zinc-950">
+                  PI {piSelecionado.numero_pi || "-"}
+                </h2>
+
+                <p className="mt-1 text-sm text-zinc-500">
+                  {piSelecionado.anunciante || "-"} •{" "}
+                  {piSelecionado.executivo || "-"}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPiSelecionado(null)}
+                className="rounded-xl border border-zinc-200 px-4 py-2 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600"
+              >
+                Fechar
+              </button>
+            </div>
+
+            <div className="max-h-[70vh] overflow-y-auto p-6">
+              <div className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-2xl bg-red-600 p-4 text-white">
+                  <span className="text-xs font-bold uppercase tracking-wide text-red-100">
+                    Valor líquido
+                  </span>
+
+                  <strong className="mt-2 block text-xl font-black">
+                    {money(Number(piSelecionado.valor_liquido || 0))}
+                  </strong>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                  <span className="text-xs font-bold uppercase tracking-wide text-zinc-400">
+                    Valor bruto
+                  </span>
+
+                  <strong className="mt-2 block text-xl font-black text-zinc-950">
+                    {money(Number(piSelecionado.valor_bruto || 0))}
+                  </strong>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                  <span className="text-xs font-bold uppercase tracking-wide text-zinc-400">
+                    Anunciante
+                  </span>
+
+                  <strong className="mt-2 block break-words text-sm font-black text-zinc-950">
+                    {piSelecionado.anunciante || "-"}
+                  </strong>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                  <span className="text-xs font-bold uppercase tracking-wide text-zinc-400">
+                    Agência
+                  </span>
+
+                  <strong className="mt-2 block break-words text-sm font-black text-zinc-950">
+                    {piSelecionado.agencia || "-"}
+                  </strong>
+                </div>
+              </div>
+
+              <PiDetalhes item={piSelecionado} />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
 
 function PiDetalhes({ item }: { item: Pi }) {
   return (
-    <div className="rounded-2xl border border-red-100 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <span className="text-xs font-black uppercase tracking-[0.16em] text-red-600">
-            Informações do PI
-          </span>
-
-          <h3 className="mt-1 text-xl font-black text-zinc-950">
-            PI {item.numero_pi || "-"}
-          </h3>
-        </div>
-
-        <span className="w-fit rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
-          {nomeArea(classificarArea(item))}
-        </span>
-      </div>
-
+    <div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <InfoCard label="PI Matriz" value={item.pi_matriz} />
         <InfoCard label="Número PI" value={item.numero_pi} />
@@ -863,9 +903,7 @@ function ResumoCard({
         <div>
           <h2 className="text-xl font-black">{title}</h2>
 
-          <p className="text-sm text-zinc-500">
-            Ordenado por valor líquido.
-          </p>
+          <p className="text-sm text-zinc-500">Ordenado por valor líquido.</p>
         </div>
 
         <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-500">
@@ -892,9 +930,7 @@ function ResumoCard({
                     {item.nome}
                   </strong>
 
-                  <small className="text-zinc-500">
-                    {item.pis} PIs
-                  </small>
+                  <small className="text-zinc-500">{item.pis} PIs</small>
                 </div>
 
                 <div className="text-right">
