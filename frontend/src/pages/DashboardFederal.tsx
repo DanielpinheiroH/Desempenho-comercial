@@ -208,29 +208,27 @@ export default function DashboardFederal() {
   return (
     <main className="space-y-6 text-zinc-950">
       <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div>
-          <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
-            Comercial Federal
-          </span>
+        <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
+          Comercial Federal
+        </span>
 
-          <h1 className="text-3xl font-black tracking-tight md:text-4xl">
-            Dashboard Federal
-          </h1>
+        <h1 className="text-3xl font-black tracking-tight md:text-4xl">
+          Dashboard Federal
+        </h1>
 
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
-            Acompanhe os PIs, faturamento, anunciantes, agências e evolução
-            mensal da área Federal.
-          </p>
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
+          Acompanhe os PIs, faturamento, anunciantes, agências e evolução
+          mensal da área Federal.
+        </p>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/busca-pi")}
-              className="rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-700"
-            >
-              Buscar PI
-            </button>
-          </div>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => navigate("/busca-pi")}
+            className="rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-700"
+          >
+            Buscar PI
+          </button>
         </div>
       </section>
 
@@ -304,25 +302,33 @@ export default function DashboardFederal() {
               <small className="text-zinc-400">Média por PI</small>
             </div>
 
-            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+            <button
+              type="button"
+              onClick={() => navigate("/federal/anunciantes")}
+              className="rounded-2xl border border-zinc-200 bg-white p-5 text-left shadow-sm transition hover:border-red-300 hover:shadow-md"
+            >
               <span className="text-sm text-zinc-500">Anunciantes</span>
 
               <strong className="mt-2 block text-2xl font-black">
                 {anunciantes}
               </strong>
 
-              <small className="text-zinc-400">Clientes únicos</small>
-            </div>
+              <small className="text-zinc-400">Clique para visualizar</small>
+            </button>
 
-            <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+            <button
+              type="button"
+              onClick={() => navigate("/federal/agencias")}
+              className="rounded-2xl border border-zinc-200 bg-white p-5 text-left shadow-sm transition hover:border-red-300 hover:shadow-md"
+            >
               <span className="text-sm text-zinc-500">Agências</span>
 
               <strong className="mt-2 block text-2xl font-black">
                 {agencias}
               </strong>
 
-              <small className="text-zinc-400">Sem considerar direto</small>
-            </div>
+              <small className="text-zinc-400">Clique para visualizar</small>
+            </button>
           </section>
 
           <section className="grid gap-6 xl:grid-cols-[1fr_320px]">
@@ -423,7 +429,11 @@ export default function DashboardFederal() {
             </div>
 
             <aside className="space-y-4">
-              <div className="w-full rounded-3xl bg-zinc-950 p-5 text-left text-white shadow-sm">
+              <button
+                type="button"
+                onClick={() => navigate("/federal/anunciantes")}
+                className="w-full rounded-3xl bg-zinc-950 p-5 text-left text-white shadow-sm transition hover:bg-red-600"
+              >
                 <span className="text-sm text-zinc-300">
                   Anunciantes / Agências
                 </span>
@@ -433,9 +443,9 @@ export default function DashboardFederal() {
                 </strong>
 
                 <p className="mt-2 text-sm text-zinc-300">
-                  Sem considerar agência direta.
+                  Clique para visualizar os anunciantes.
                 </p>
-              </div>
+              </button>
 
               <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
                 <span className="text-sm text-zinc-500">Melhor ano</span>

@@ -455,47 +455,47 @@ export default function DashboardAdmin() {
   }
 
   return (
-    <main className="min-h-screen space-y-6 bg-zinc-100 text-zinc-950">
-      <section className="overflow-hidden rounded-[2rem] bg-zinc-950 shadow-sm">
-        <div className="relative isolate p-5 text-white sm:p-7 lg:p-8">
+    <main className="min-h-screen w-full max-w-full overflow-x-hidden space-y-5 bg-zinc-100 text-zinc-950">
+      <section className="w-full max-w-full overflow-hidden rounded-[1.5rem] bg-zinc-950 shadow-sm md:rounded-[2rem]">
+        <div className="relative isolate min-w-0 p-4 text-white sm:p-6 lg:p-8">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,rgba(220,38,38,0.42),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(127,29,29,0.42),transparent_32%)]" />
 
-          <div className="grid gap-6 xl:grid-cols-[1fr_430px] xl:items-end">
-            <div>
-              <span className="inline-flex rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-100">
+          <div className="grid min-w-0 gap-5 xl:grid-cols-[1fr_430px] xl:items-end">
+            <div className="min-w-0">
+              <span className="inline-flex max-w-full rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-red-100 sm:text-xs sm:tracking-[0.18em]">
                 Painel administrativo
               </span>
 
-              <h1 className="mt-4 max-w-4xl text-3xl font-black tracking-tight md:text-5xl">
+              <h1 className="mt-4 max-w-full break-words text-2xl font-black tracking-tight sm:text-3xl md:text-5xl">
                 Visão geral comercial
               </h1>
 
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-300 md:text-base">
+              <p className="mt-3 max-w-full break-words text-sm leading-6 text-zinc-300 md:text-base">
                 Olá, {user?.nome || "Admin"}. Acompanhe faturamento, áreas,
                 anunciantes, agências e indicadores comerciais em um só lugar.
               </p>
 
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="mt-5 flex min-w-0 flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => navigate("/busca-pi")}
-                  className="rounded-2xl bg-red-600 px-4 py-3 text-sm font-black text-white transition hover:bg-red-700"
+                  className="w-full rounded-2xl bg-red-600 px-4 py-3 text-sm font-black text-white transition hover:bg-red-700 sm:w-auto"
                 >
                   Abrir busca de PI
                 </button>
               </div>
             </div>
 
-            <div className="rounded-[1.7rem] border border-white/10 bg-white p-5 text-zinc-950 shadow-xl">
+            <div className="min-w-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white p-4 text-zinc-950 shadow-xl sm:p-5 md:rounded-[1.7rem]">
               <span className="text-sm font-bold text-zinc-500">
                 Total líquido desde 2022
               </span>
 
-              <strong className="mt-2 block break-words text-2xl font-black leading-tight md:text-3xl">
+              <strong className="mt-2 block max-w-full break-words text-xl font-black leading-tight sm:text-2xl md:text-3xl">
                 {money(totalLiquidoDesde2022)}
               </strong>
 
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-4 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
                 <MiniStat label="PIs filtrados" value={String(totalPIs)} />
                 <MiniStat label="Ticket médio" value={money(ticketMedio)} />
               </div>
@@ -504,11 +504,11 @@ export default function DashboardAdmin() {
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
-        <div className="mb-4 flex flex-col justify-between gap-2 md:flex-row md:items-end">
-          <div>
+      <section className="w-full max-w-full overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[2rem]">
+        <div className="mb-4 flex min-w-0 flex-col justify-between gap-2 md:flex-row md:items-end">
+          <div className="min-w-0">
             <h2 className="text-lg font-black">Filtros do painel</h2>
-            <p className="text-sm text-zinc-500">
+            <p className="break-words text-sm text-zinc-500">
               Refine a visão por ano, mês, área comercial ou busca livre.
             </p>
           </div>
@@ -517,18 +517,18 @@ export default function DashboardAdmin() {
             <button
               type="button"
               onClick={limparFiltros}
-              className="w-fit rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-700 transition hover:bg-red-100"
+              className="w-full rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-700 transition hover:bg-red-100 sm:w-fit"
             >
               Limpar filtros ativos
             </button>
           )}
         </div>
 
-        <div className="grid gap-3 xl:grid-cols-[150px_170px_230px_1fr_auto]">
+        <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[150px_170px_230px_1fr_auto]">
           <select
             value={anoSelecionado}
             onChange={(event) => alterarAno(event.target.value)}
-            className="h-12 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100"
+            className="h-12 w-full min-w-0 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100"
           >
             <option value="">Todos os anos</option>
 
@@ -542,7 +542,7 @@ export default function DashboardAdmin() {
           <select
             value={mesSelecionado}
             onChange={(event) => setMesSelecionado(event.target.value)}
-            className="h-12 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100"
+            className="h-12 w-full min-w-0 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100"
           >
             <option value="">Todos os meses</option>
 
@@ -558,7 +558,7 @@ export default function DashboardAdmin() {
             onChange={(event) =>
               setAreaSelecionada(event.target.value as AreaTipo | "")
             }
-            className="h-12 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100"
+            className="h-12 w-full min-w-0 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-semibold outline-none transition focus:border-red-500 focus:ring-4 focus:ring-red-100"
           >
             <option value="">Todas as áreas</option>
             <option value="privado">Comercial Privado</option>
@@ -571,14 +571,14 @@ export default function DashboardAdmin() {
           <input
             value={busca}
             onChange={(event) => setBusca(event.target.value)}
-            className="h-12 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-semibold outline-none transition placeholder:font-normal placeholder:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+            className="h-12 w-full min-w-0 rounded-2xl border border-zinc-200 bg-white px-4 text-sm font-semibold outline-none transition placeholder:font-normal placeholder:text-zinc-400 focus:border-red-500 focus:ring-4 focus:ring-red-100 sm:col-span-2 xl:col-span-1"
             placeholder="Buscar executivo, PI, anunciante, agência, campanha, canal..."
           />
 
           <button
             type="button"
             onClick={limparFiltros}
-            className="h-12 rounded-2xl border border-zinc-200 px-5 text-sm font-black text-zinc-700 transition hover:border-red-500 hover:bg-red-50 hover:text-red-700"
+            className="h-12 w-full rounded-2xl border border-zinc-200 px-5 text-sm font-black text-zinc-700 transition hover:border-red-500 hover:bg-red-50 hover:text-red-700 sm:col-span-2 xl:col-span-1"
           >
             Limpar
           </button>
@@ -589,7 +589,7 @@ export default function DashboardAdmin() {
         <LoadingDashboard />
       ) : (
         <>
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <KpiCard
               label="Total bruto"
               value={money(totalBrutoDesde2022)}
@@ -620,7 +620,7 @@ export default function DashboardAdmin() {
             />
           </section>
 
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <section className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <ActionCard
               label="Anunciantes"
               title={String(totalAnunciantes)}
@@ -643,11 +643,11 @@ export default function DashboardAdmin() {
             />
           </section>
 
-          <section className="rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm">
-            <div className="mb-5 flex flex-col justify-between gap-2 md:flex-row md:items-end">
-              <div>
+          <section className="w-full max-w-full overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[2rem]">
+            <div className="mb-5 flex min-w-0 flex-col justify-between gap-2 md:flex-row md:items-end">
+              <div className="min-w-0">
                 <h2 className="text-xl font-black">Áreas comerciais</h2>
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="mt-1 break-words text-sm text-zinc-500">
                   Clique em uma área para abrir a tela detalhada.
                 </p>
               </div>
@@ -657,19 +657,19 @@ export default function DashboardAdmin() {
               </span>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-5">
               {areas.map((item) => (
                 <button
                   type="button"
                   key={item.area}
                   onClick={() => navigate(`/admin/area/${item.area}`)}
-                  className="group rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-5 text-left transition hover:-translate-y-0.5 hover:border-red-300 hover:bg-white hover:shadow-md"
+                  className="group min-w-0 overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-zinc-50 p-4 text-left transition hover:border-red-300 hover:bg-white hover:shadow-md sm:p-5"
                 >
-                  <span className="text-sm font-black text-zinc-600 group-hover:text-red-700">
+                  <span className="block break-words text-sm font-black text-zinc-600 group-hover:text-red-700">
                     {item.nome}
                   </span>
 
-                  <strong className="mt-2 block break-words text-lg font-black text-zinc-950">
+                  <strong className="mt-2 block max-w-full break-words text-base font-black text-zinc-950 sm:text-lg">
                     {money(item.total)}
                   </strong>
 
@@ -685,25 +685,25 @@ export default function DashboardAdmin() {
                   </div>
 
                   <div className="mt-4 space-y-1 text-xs font-bold text-zinc-500">
-                    <div>Bruto: {money(item.bruto)}</div>
-                    <div>Ticket: {money(item.ticket)}</div>
+                    <div className="break-words">Bruto: {money(item.bruto)}</div>
+                    <div className="break-words">Ticket: {money(item.ticket)}</div>
                   </div>
                 </button>
               ))}
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm">
-            <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <div>
+          <section className="w-full max-w-full overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[2rem]">
+            <div className="mb-5 flex min-w-0 flex-col gap-2 md:flex-row md:items-end md:justify-between">
+              <div className="min-w-0">
                 <h2 className="text-xl font-black">Faturamento por ano</h2>
 
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="mt-1 break-words text-sm text-zinc-500">
                   Clique em um ano para visualizar os meses consolidados.
                 </p>
               </div>
 
-              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-500">
+              <span className="w-fit rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-500">
                 {faturamentoPorAno.length} anos
               </span>
             </div>
@@ -711,7 +711,7 @@ export default function DashboardAdmin() {
             {faturamentoPorAno.length === 0 ? (
               <EmptyState text="Nenhum faturamento encontrado para os filtros selecionados." />
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 {faturamentoPorAno.map((ano) => {
                   const aberto = anoAberto === ano.ano
 
@@ -723,11 +723,11 @@ export default function DashboardAdmin() {
                       <button
                         type="button"
                         onClick={() => alternarAno(ano.ano)}
-                        className="w-full text-left"
+                        className="w-full min-w-0 text-left"
                       >
-                        <div className="flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <strong className="block text-xl font-black text-zinc-950">
+                            <strong className="block break-words text-xl font-black text-zinc-950">
                               {ano.ano}
                             </strong>
 
@@ -747,15 +747,9 @@ export default function DashboardAdmin() {
                               Líquido
                             </span>
 
-                            <div className="mt-1 leading-tight">
-                              <span className="block text-[10px] font-bold text-zinc-500">
-                                R$
-                              </span>
-
-                              <strong className="block text-[12px] font-black leading-tight text-zinc-950">
-                                {Number(ano.liquido || 0).toLocaleString("pt-BR")}
-                              </strong>
-                            </div>
+                            <strong className="mt-1 block max-w-full break-words text-sm font-black leading-tight text-zinc-950">
+                              {money(ano.liquido)}
+                            </strong>
                           </div>
 
                           <div className="min-w-0">
@@ -763,11 +757,9 @@ export default function DashboardAdmin() {
                               Bruto
                             </span>
 
-                            <div className="mt-1 leading-tight">
-                              <strong className="block text-[11px] font-black text-zinc-700">
-                                {money(ano.bruto)}
-                              </strong>
-                            </div>
+                            <strong className="mt-1 block max-w-full break-words text-xs font-black leading-tight text-zinc-700">
+                              {money(ano.bruto)}
+                            </strong>
                           </div>
                         </div>
                       </button>
@@ -790,11 +782,11 @@ export default function DashboardAdmin() {
                                   key={mes.mes}
                                   type="button"
                                   onClick={() => abrirMes(mes.mes)}
-                                  className="w-full rounded-xl border border-zinc-200 bg-white p-3 text-left transition hover:border-red-300 hover:bg-red-50"
+                                  className="w-full min-w-0 rounded-xl border border-zinc-200 bg-white p-3 text-left transition hover:border-red-300 hover:bg-red-50"
                                 >
-                                  <div className="flex items-start justify-between gap-2">
+                                  <div className="flex min-w-0 items-start justify-between gap-2">
                                     <div className="min-w-0">
-                                      <strong className="block text-sm font-black text-zinc-950">
+                                      <strong className="block break-words text-sm font-black text-zinc-950">
                                         {mes.mes}
                                       </strong>
 
@@ -804,11 +796,11 @@ export default function DashboardAdmin() {
                                     </div>
 
                                     <div className="min-w-0 text-right">
-                                      <b className="block break-words text-[10px] font-black leading-tight text-zinc-950">
+                                      <b className="block max-w-[120px] break-words text-[10px] font-black leading-tight text-zinc-950">
                                         {money(mes.liquido)}
                                       </b>
 
-                                      <small className="mt-1 block break-words text-[9px] leading-tight text-zinc-400">
+                                      <small className="mt-1 block max-w-[120px] break-words text-[9px] leading-tight text-zinc-400">
                                         Bruto: {money(mes.bruto)}
                                       </small>
                                     </div>
@@ -825,33 +817,33 @@ export default function DashboardAdmin() {
             )}
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-2">
+          <section className="grid min-w-0 gap-6 xl:grid-cols-2">
             <RankingCard title="Top anunciantes" items={topAnunciantes} />
             <RankingCard title="Top agências" items={topAgencias} />
           </section>
 
           {subperfisGDF.length > 0 && (
-            <section className="rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm">
-              <div className="mb-5">
+            <section className="w-full max-w-full overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[2rem]">
+              <div className="mb-5 min-w-0">
                 <h2 className="text-xl font-black">Subperfis GDF / CLDF</h2>
-                <p className="mt-1 text-sm text-zinc-500">
+                <p className="mt-1 break-words text-sm text-zinc-500">
                   Abra uma visão separada por órgão ou subperfil.
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {subperfisGDF.map((item) => (
                   <button
                     type="button"
-                    className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 text-left transition hover:-translate-y-0.5 hover:border-red-300 hover:bg-white hover:shadow-md"
+                    className="min-w-0 overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-left transition hover:border-red-300 hover:bg-white hover:shadow-md sm:p-5"
                     key={item.nome}
                     onClick={() => navigate(`/admin/subperfil/${item.slug}`)}
                   >
-                    <span className="text-sm font-black text-zinc-600">
+                    <span className="block break-words text-sm font-black text-zinc-600">
                       {item.nome}
                     </span>
 
-                    <strong className="mt-2 block break-words text-xl font-black">
+                    <strong className="mt-2 block max-w-full break-words text-lg font-black sm:text-xl">
                       {money(item.total)}
                     </strong>
 
@@ -871,9 +863,9 @@ export default function DashboardAdmin() {
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-zinc-100 p-3">
+    <div className="min-w-0 overflow-hidden rounded-2xl bg-zinc-100 p-3">
       <span className="block text-xs font-bold text-zinc-500">{label}</span>
-      <strong className="mt-1 block truncate text-sm font-black text-zinc-950">
+      <strong className="mt-1 block max-w-full break-words text-sm font-black text-zinc-950">
         {value}
       </strong>
     </div>
@@ -912,14 +904,14 @@ function KpiCard({
   }
 
   return (
-    <div className={`rounded-[1.5rem] border p-5 shadow-sm ${classes[variant]}`}>
-      <span className={`text-sm font-bold ${labelClasses[variant]}`}>
+    <div className={`min-w-0 overflow-hidden rounded-[1.5rem] border p-4 shadow-sm sm:p-5 ${classes[variant]}`}>
+      <span className={`block text-sm font-bold ${labelClasses[variant]}`}>
         {label}
       </span>
 
       <strong
-        className={`mt-2 block break-words font-black leading-tight ${
-          compact ? "text-xl md:text-2xl" : "text-2xl md:text-3xl"
+        className={`mt-2 block max-w-full break-words font-black leading-tight ${
+          compact ? "text-lg sm:text-xl md:text-2xl" : "text-xl sm:text-2xl md:text-3xl"
         }`}
       >
         {value}
@@ -945,11 +937,11 @@ function ActionCard({
     <button
       type="button"
       onClick={onClick}
-      className="rounded-[1.5rem] border border-zinc-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-red-300 hover:shadow-md"
+      className="min-w-0 overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white p-4 text-left shadow-sm transition hover:border-red-300 hover:shadow-md sm:p-5"
     >
-      <span className="text-sm font-bold text-zinc-500">{label}</span>
+      <span className="block text-sm font-bold text-zinc-500">{label}</span>
 
-      <strong className="mt-2 block text-xl font-black text-zinc-950">
+      <strong className="mt-2 block break-words text-lg font-black text-zinc-950 sm:text-xl">
         {title}
       </strong>
 
@@ -968,16 +960,16 @@ function RankingCard({
   const maior = items[0]?.total || 1
 
   return (
-    <section className="rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm">
-      <div className="mb-5 flex items-end justify-between gap-4">
-        <div>
+    <section className="w-full max-w-full overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 md:rounded-[2rem]">
+      <div className="mb-5 flex min-w-0 items-end justify-between gap-4">
+        <div className="min-w-0">
           <h2 className="text-xl font-black">{title}</h2>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 break-words text-sm text-zinc-500">
             Ordenado por valor líquido.
           </p>
         </div>
 
-        <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-500">
+        <span className="shrink-0 rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-500">
           Top {items.length}
         </span>
       </div>
@@ -992,15 +984,15 @@ function RankingCard({
             return (
               <div
                 key={`${item.nome}-${index}`}
-                className="rounded-2xl border border-transparent p-2 transition hover:border-zinc-100 hover:bg-zinc-50"
+                className="min-w-0 rounded-2xl border border-transparent p-2 transition hover:border-zinc-100 hover:bg-zinc-50"
               >
-                <div className="mb-2 flex items-center justify-between gap-4">
+                <div className="mb-2 flex min-w-0 items-center justify-between gap-3">
                   <div className="min-w-0">
                     <span className="text-xs font-black text-red-600">
                       #{index + 1}
                     </span>
 
-                    <strong className="block truncate text-sm text-zinc-950">
+                    <strong className="block break-words text-sm text-zinc-950">
                       {item.nome}
                     </strong>
 
@@ -1009,7 +1001,7 @@ function RankingCard({
                     </small>
                   </div>
 
-                  <b className="shrink-0 text-sm text-zinc-950">
+                  <b className="max-w-[130px] shrink-0 break-words text-right text-xs text-zinc-950 sm:text-sm">
                     {money(item.total)}
                   </b>
                 </div>
@@ -1039,7 +1031,7 @@ function EmptyState({ text }: { text: string }) {
 
 function LoadingDashboard() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: 6 }).map((_, index) => (
         <div
           key={index}

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 
-import { getPisCached } from "../services/api"
+import { getPisCached, getUser } from "../services/api"
 
 type Pi = {
   pi_matriz?: string
@@ -181,6 +181,16 @@ function ordenarPerfis(items: ResumoItem[]) {
 }
 
 export default function VendasDoDia() {
+  const user = getUser()
+
+  const grupos = Array.isArray(user?.grupos)
+    ? user.grupos.map((grupo: string) => normalizar(grupo))
+    : []
+
+  const ehAdmin = user?.role === "admin"
+  const ehFederal = grupos.includes("federal")
+  const ehEstadual = grupos.includes("estadual")
+
   const [dados, setDados] = useState<Pi[]>([])
   const [loading, setLoading] = useState(true)
   const [modoFiltro, setModoFiltro] = useState<ModoFiltro>("periodo")
@@ -196,7 +206,25 @@ export default function VendasDoDia() {
 
       const dadosCache = await getPisCached()
 
-      setDados(Array.isArray(dadosCache) ? (dadosCache as Pi[]) : [])
+      let dadosFiltrados = Array.isArray(dadosCache)
+        ? (dadosCache as Pi[])
+        : []
+
+      if (!ehAdmin) {
+        if (ehFederal) {
+          dadosFiltrados = dadosFiltrados.filter(
+            (item) => classificarArea(item) === "federal"
+          )
+        } else if (ehEstadual) {
+          dadosFiltrados = dadosFiltrados.filter(
+            (item) => classificarArea(item) === "estadual"
+          )
+        } else {
+          dadosFiltrados = []
+        }
+      }
+
+      setDados(dadosFiltrados)
     } catch (error) {
       console.error(error)
       setDados([])
@@ -467,7 +495,7 @@ export default function VendasDoDia() {
           {periodoLabel}
         </div>
 
-        <div className="grid grid-cols-[1fr_220px_220px] bg-red-700 text-white">
+        <div className="hidden grid-cols-[1fr_220px_220px] bg-red-700 text-white md:grid">
           <div className="border-r border-white/40 px-4 py-2 text-center text-lg font-black">
             Perfil Anunciante
           </div>
@@ -485,37 +513,59 @@ export default function VendasDoDia() {
           <EmptyState text="Nenhuma venda encontrada para o período." />
         ) : (
           <>
-            {perfisAnunciante.map((item, index) => (
-              <div
-                key={`${item.nome}-${index}`}
-                className={`grid grid-cols-[1fr_220px_220px] text-sm ${
-                  index % 2 === 0 ? "bg-red-50" : "bg-white"
-                }`}
-              >
-                <div className="border-r border-white px-3 py-1 font-black">
-                  {item.nome}
-                </div>
+            <div className="md:hidden">
+              {perfisAnunciante.map((item, index) => (
+                <div
+                  key={`${item.nome}-${index}`}
+                  className={`border-b border-red-100 p-4 ${
+                    index % 2 === 0 ? "bg-red-50" : "bg-white"
+                  }`}
+                >
+                  <strong className="block text-sm font-black text-zinc-950">
+                    {item.nome}
+                  </strong>
 
-                <div className="border-r border-white px-3 py-1 text-right font-black">
-                  {money(item.bruto)}
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <MiniInfo label="Bruto" value={money(item.bruto)} />
+                    <MiniInfo label="Líquido" value={money(item.liquido)} />
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                <div className="px-3 py-1 text-right font-black">
-                  {money(item.liquido)}
+            <div className="hidden md:block">
+              {perfisAnunciante.map((item, index) => (
+                <div
+                  key={`${item.nome}-${index}`}
+                  className={`grid grid-cols-[1fr_220px_220px] text-sm ${
+                    index % 2 === 0 ? "bg-red-50" : "bg-white"
+                  }`}
+                >
+                  <div className="border-r border-white px-3 py-1 font-black">
+                    {item.nome}
+                  </div>
+
+                  <div className="border-r border-white px-3 py-1 text-right font-black">
+                    {money(item.bruto)}
+                  </div>
+
+                  <div className="px-3 py-1 text-right font-black">
+                    {money(item.liquido)}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
-            <div className="grid grid-cols-[1fr_220px_220px] bg-red-700 text-lg font-black text-white">
-              <div className="border-r border-white/40 px-3 py-2">
+            <div className="grid gap-2 bg-red-700 p-3 text-lg font-black text-white md:grid-cols-[1fr_220px_220px] md:p-0">
+              <div className="md:border-r md:border-white/40 md:px-3 md:py-2">
                 Total Comercial
               </div>
 
-              <div className="border-r border-white/40 px-3 py-2 text-right">
+              <div className="text-right md:border-r md:border-white/40 md:px-3 md:py-2">
                 {money(totalBruto)}
               </div>
 
-              <div className="px-3 py-2 text-right">
+              <div className="text-right md:px-3 md:py-2">
                 {money(totalLiquido)}
               </div>
             </div>
@@ -593,60 +643,95 @@ export default function VendasDoDia() {
         ) : vendasFiltradas.length === 0 ? (
           <EmptyState text="Nenhuma venda encontrada para esse período." />
         ) : (
-          <div className="overflow-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
-                  <th className="px-4 py-3">PI</th>
-                  <th className="px-4 py-3">Data venda</th>
-                  <th className="px-4 py-3">Mês venda</th>
-                  <th className="px-4 py-3">Área</th>
-                  <th className="px-4 py-3">Perfil</th>
-                  <th className="px-4 py-3">Subperfil</th>
-                  <th className="px-4 py-3">Executivo</th>
-                  <th className="px-4 py-3">Anunciante</th>
-                  <th className="px-4 py-3">Agência</th>
-                  <th className="px-4 py-3 text-right">Líquido</th>
-                  <th className="px-4 py-3 text-right">Bruto</th>
-                </tr>
-              </thead>
+          <>
+            <div className="space-y-3 md:hidden">
+              {vendasFiltradas.map((item, index) => (
+                <button
+                  key={`${item.numero_pi}-${index}`}
+                  type="button"
+                  onClick={() => selecionarPi(item)}
+                  className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 p-4 text-left shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700">
+                        PI {item.numero_pi}
+                      </span>
 
-              <tbody>
-                {vendasFiltradas.map((item, index) => (
-                  <tr
-                    key={`${item.numero_pi}-${index}`}
-                    onClick={() => selecionarPi(item)}
-                    className="cursor-pointer border-b border-zinc-100 hover:bg-red-50"
-                  >
-                    <td className="px-4 py-3 font-black text-red-600">
-                      {item.numero_pi}
-                    </td>
+                      <strong className="mt-3 block text-sm font-black text-zinc-950">
+                        {item.anunciante || "-"}
+                      </strong>
 
-                    <td className="px-4 py-3">{item.data_venda || "-"}</td>
-                    <td className="px-4 py-3">{item.mes_venda || "-"}</td>
+                      <p className="mt-1 text-xs font-semibold text-zinc-500">
+                        {item.executivo || "-"}
+                      </p>
+                    </div>
 
-                    <td className="px-4 py-3 font-semibold">
-                      {nomeArea(classificarArea(item))}
-                    </td>
+                    <div className="text-right">
+                      <strong className="block text-sm font-black text-zinc-950">
+                        {money(item.valor_liquido)}
+                      </strong>
 
-                    <td className="px-4 py-3">{item.perfil_anunciante || "-"}</td>
-                    <td className="px-4 py-3">{item.sub_perfil_anunciante || "-"}</td>
-                    <td className="px-4 py-3">{item.executivo}</td>
-                    <td className="px-4 py-3">{item.anunciante}</td>
-                    <td className="px-4 py-3">{item.agencia}</td>
+                      <small className="text-xs text-zinc-500">
+                        Bruto: {money(item.valor_bruto)}
+                      </small>
+                    </div>
+                  </div>
 
-                    <td className="px-4 py-3 text-right font-black">
-                      {money(item.valor_liquido)}
-                    </td>
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                    <MiniInfo label="Data" value={item.data_venda || "-"} />
+                    <MiniInfo label="Mês" value={item.mes_venda || "-"} />
+                    <MiniInfo label="Área" value={nomeArea(classificarArea(item))} />
+                    <MiniInfo label="Perfil" value={item.perfil_anunciante || "-"} />
+                    <MiniInfo label="Subperfil" value={item.sub_perfil_anunciante || "-"} />
+                    <MiniInfo label="Agência" value={item.agencia || "-"} />
+                  </div>
+                </button>
+              ))}
+            </div>
 
-                    <td className="px-4 py-3 text-right font-black text-zinc-600">
-                      {money(item.valor_bruto)}
-                    </td>
+            <div className="hidden overflow-auto md:block">
+              <table className="min-w-full text-xs lg:text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
+                    <th className="px-3 py-3">PI</th>
+                    <th className="px-3 py-3">Data</th>
+                    <th className="px-3 py-3">Mês</th>
+                    <th className="px-3 py-3">Área</th>
+                    <th className="px-3 py-3">Perfil</th>
+                    <th className="px-3 py-3">Subperfil</th>
+                    <th className="px-3 py-3">Executivo</th>
+                    <th className="px-3 py-3">Anunciante</th>
+                    <th className="px-3 py-3">Agência</th>
+                    <th className="px-3 py-3 text-right">Líquido</th>
+                    <th className="px-3 py-3 text-right">Bruto</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+
+                <tbody>
+                  {vendasFiltradas.map((item, index) => (
+                    <tr
+                      key={`${item.numero_pi}-${index}`}
+                      onClick={() => selecionarPi(item)}
+                      className="cursor-pointer border-b border-zinc-100 hover:bg-red-50"
+                    >
+                      <td className="px-3 py-3 font-black text-red-600">{item.numero_pi}</td>
+                      <td className="px-3 py-3">{item.data_venda || "-"}</td>
+                      <td className="px-3 py-3">{item.mes_venda || "-"}</td>
+                      <td className="px-3 py-3 font-semibold">{nomeArea(classificarArea(item))}</td>
+                      <td className="px-3 py-3">{item.perfil_anunciante || "-"}</td>
+                      <td className="px-3 py-3">{item.sub_perfil_anunciante || "-"}</td>
+                      <td className="px-3 py-3">{item.executivo}</td>
+                      <td className="px-3 py-3">{item.anunciante}</td>
+                      <td className="px-3 py-3">{item.agencia}</td>
+                      <td className="px-3 py-3 text-right font-black">{money(item.valor_liquido)}</td>
+                      <td className="px-3 py-3 text-right font-black text-zinc-600">{money(item.valor_bruto)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
     </main>
@@ -762,6 +847,20 @@ function EmptyState({ text }: { text: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-6 text-center text-sm font-semibold text-zinc-500">
       {text}
+    </div>
+  )
+}
+
+function MiniInfo({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white p-2">
+      <span className="block text-[10px] font-black uppercase text-zinc-400">
+        {label}
+      </span>
+
+      <strong className="mt-1 block break-words text-xs font-black text-zinc-800">
+        {value || "-"}
+      </strong>
     </div>
   )
 }

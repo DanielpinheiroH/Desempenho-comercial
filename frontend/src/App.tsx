@@ -20,6 +20,7 @@ import MesDetalhePage from "./pages/admin/MesDetalhePage.tsx"
 import AdminSubperfilPisPage from "./pages/admin/AdminSubperfilPisPage.tsx"
 import AdminEntidadesPage from "./pages/admin/AdminEntidadesPage.tsx"
 import VendasDoDia from "./pages/VendasDoDia.tsx"
+import FederalEntidadesPage from "./pages/FederalEntidadesPage.tsx"
 
 import { getUser } from "./services/api"
 
@@ -50,7 +51,15 @@ function App() {
             user?.role === "admin" ? <VendasDoDia /> : <Navigate to="/" />
           }
         />
+<Route
+  path="/federal/anunciantes"
+  element={<FederalEntidadesPage tipo="anunciantes" />}
+/>
 
+<Route
+  path="/federal/agencias"
+  element={<FederalEntidadesPage tipo="agencias" />}
+/>
         <Route path="/busca-pi" element={<BuscaPI />} />
         <Route path="/mes/:mes" element={<DetalheMes />} />
         <Route path="/ano/:ano" element={<AnoDetalhePage />} />
