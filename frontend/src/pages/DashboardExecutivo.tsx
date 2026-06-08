@@ -1,13 +1,26 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+} from "react-simple-maps"
+import { scaleLinear } from "d3-scale"
 
 import { api, getToken, getUser } from "../services/api"
+
+const MAPA_BRASIL_GEO_URL =
+  "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson"
+
+type MapaBase = "cliente" | "agencia"
 
 type Pi = {
   numero_pi: string
   executivo: string
   anunciante: string
   agencia: string
+  uf_cliente?: string | null
+  uf_agencia?: string | null
   grupo: string
   mes_venda: string
   valor_bruto: number
@@ -35,6 +48,54 @@ type AnoResumo = {
   meta: number
   quantidade: number
   meses: MesResumo[]
+}
+
+type MapaUfResumo = {
+  uf: string
+  liquido: number
+  bruto: number
+  pis: number
+}
+
+type MapaTooltip = {
+  uf: string
+  x: number
+  y: number
+}
+
+type GeographyItem = {
+  rsmKey: string
+  properties: Record<string, string | number | undefined>
+}
+
+const UF_NAME_TO_SIGLA: Record<string, string> = {
+  acre: "AC",
+  alagoas: "AL",
+  amapa: "AP",
+  amazonas: "AM",
+  bahia: "BA",
+  ceara: "CE",
+  "distrito federal": "DF",
+  "espirito santo": "ES",
+  goias: "GO",
+  maranhao: "MA",
+  "mato grosso": "MT",
+  "mato grosso do sul": "MS",
+  "minas gerais": "MG",
+  para: "PA",
+  paraiba: "PB",
+  parana: "PR",
+  pernambuco: "PE",
+  piaui: "PI",
+  "rio de janeiro": "RJ",
+  "rio grande do norte": "RN",
+  "rio grande do sul": "RS",
+  rondonia: "RO",
+  roraima: "RR",
+  "santa catarina": "SC",
+  "sao paulo": "SP",
+  sergipe: "SE",
+  tocantins: "TO",
 }
 
 function money(value: number) {
@@ -72,6 +133,33 @@ function getAno(mes: string) {
 
 function getMesNumero(mes: string) {
   return Number(mes?.split("/")[0] || 99)
+}
+
+function getUfFromGeography(properties: GeographyItem["properties"]) {
+  const candidates = [
+    properties.sigla,
+    properties.uf,
+    properties.UF,
+    properties.postal,
+    properties.abbrev,
+  ]
+
+  const sigla = candidates
+    .map((item) => String(item || "").trim().toUpperCase())
+    .find((item) => /^[A-Z]{2}$/.test(item))
+
+  if (sigla) return sigla
+
+  const name = normalizar(
+    String(properties.name || properties.nome || properties.NAME || "")
+  )
+
+  return UF_NAME_TO_SIGLA[name] || ""
+}
+
+function getUf(item: Pi, baseMapa: MapaBase) {
+  const value = baseMapa === "cliente" ? item.uf_cliente : item.uf_agencia
+  return String(value || "").trim().toUpperCase()
 }
 
 function mesParaReferencia(mes: string) {
@@ -118,6 +206,9 @@ export default function DashboardExecutivo() {
   const [busca, setBusca] = useState("")
   const [loading, setLoading] = useState(true)
   const [anoAberto, setAnoAberto] = useState<string | null>(null)
+  const [baseMapa, setBaseMapa] = useState<MapaBase>("cliente")
+  const [ufMapaSelecionada, setUfMapaSelecionada] = useState("")
+  const [mapaTooltip, setMapaTooltip] = useState<MapaTooltip | null>(null)
 
   async function carregarDados() {
     try {
@@ -269,6 +360,52 @@ export default function DashboardExecutivo() {
       .map((item) => item.agencia)
       .filter((agencia) => isAgenciaValida(agencia))
   ).size
+
+  const mapaPorUf = useMemo(() => {
+    const mapa = new Map<string, MapaUfResumo>()
+
+    dadosFiltrados.forEach((item) => {
+      const uf = getUf(item, baseMapa)
+
+      if (!/^[A-Z]{2}$/.test(uf)) return
+
+      const atual = mapa.get(uf) || {
+        uf,
+        liquido: 0,
+        bruto: 0,
+        pis: 0,
+      }
+
+      atual.liquido += Number(item.valor_liquido || 0)
+      atual.bruto += Number(item.valor_bruto || 0)
+      atual.pis += 1
+
+      mapa.set(uf, atual)
+    })
+
+    return mapa
+  }, [dadosFiltrados, baseMapa])
+
+  const rankingMapaUf = useMemo(() => {
+    return Array.from(mapaPorUf.values()).sort(
+      (a, b) => b.liquido - a.liquido
+    )
+  }, [mapaPorUf])
+
+  const maiorValorMapa = rankingMapaUf[0]?.liquido || 0
+  const ufResumoSelecionado = ufMapaSelecionada
+    ? mapaPorUf.get(ufMapaSelecionada) || null
+    : rankingMapaUf[0] || null
+  const ufResumoTooltip = mapaTooltip
+    ? mapaPorUf.get(mapaTooltip.uf) || null
+    : null
+
+  const corMapaUf = useMemo(() => {
+    return scaleLinear<string>()
+      .domain([0, Math.max(maiorValorMapa, 1)])
+      .range(["#fee2e2", "#dc2626"])
+      .clamp(true)
+  }, [maiorValorMapa])
 
   const mesesComMeta = faturamentoPorMes.filter(
     (item) => Number(item.meta || 0) > 0
@@ -440,6 +577,187 @@ export default function DashboardExecutivo() {
 
               <small className="text-zinc-400">Sem considerar direto</small>
             </button>
+          </section>
+
+          <section className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm">
+            <div className="flex flex-col gap-4 border-b border-zinc-200 p-5 xl:flex-row xl:items-end xl:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-xl font-black">Mapa da minha carteira</h2>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Valores por UF considerando apenas os PIs vinculados a {executivoAtual || "este executivo"}.
+                </p>
+              </div>
+
+              <div className="flex rounded-2xl bg-zinc-100 p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBaseMapa("cliente")
+                    setUfMapaSelecionada("")
+                  }}
+                  className={`h-10 flex-1 rounded-xl px-4 text-xs font-black transition sm:flex-none ${
+                    baseMapa === "cliente"
+                      ? "bg-red-600 text-white shadow-sm"
+                      : "text-zinc-600 hover:bg-white"
+                  }`}
+                >
+                  Cliente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBaseMapa("agencia")
+                    setUfMapaSelecionada("")
+                  }}
+                  className={`h-10 flex-1 rounded-xl px-4 text-xs font-black transition sm:flex-none ${
+                    baseMapa === "agencia"
+                      ? "bg-red-600 text-white shadow-sm"
+                      : "text-zinc-600 hover:bg-white"
+                  }`}
+                >
+                  Agência
+                </button>
+              </div>
+            </div>
+
+            <div className="grid gap-0 xl:grid-cols-[minmax(0,1fr)_280px]">
+              <div className="relative min-h-[440px] bg-zinc-50 p-3 sm:p-5">
+                <ComposableMap
+                  projection="geoMercator"
+                  projectionConfig={{
+                    center: [-54, -15],
+                    scale: 700,
+                  }}
+                  className="h-[430px] w-full sm:h-[520px]"
+                >
+                  <Geographies geography={MAPA_BRASIL_GEO_URL}>
+                    {({ geographies }: { geographies: GeographyItem[] }) =>
+                      geographies.map((geo) => {
+                        const uf = getUfFromGeography(geo.properties)
+                        const resumo = mapaPorUf.get(uf)
+                        const selecionado = ufMapaSelecionada === uf
+
+                        return (
+                          <Geography
+                            key={geo.rsmKey}
+                            geography={geo}
+                            onMouseEnter={(event) => {
+                              setMapaTooltip({
+                                uf,
+                                x: event.clientX,
+                                y: event.clientY,
+                              })
+                            }}
+                            onMouseMove={(event) => {
+                              setMapaTooltip((atual) =>
+                                atual
+                                  ? {
+                                      ...atual,
+                                      x: event.clientX,
+                                      y: event.clientY,
+                                    }
+                                  : null
+                              )
+                            }}
+                            onMouseLeave={() => setMapaTooltip(null)}
+                            onClick={() => setUfMapaSelecionada(uf)}
+                            style={{
+                              default: {
+                                fill: resumo
+                                  ? corMapaUf(resumo.liquido)
+                                  : "#f4f4f5",
+                                stroke: selecionado ? "#18181b" : "#ffffff",
+                                strokeWidth: selecionado ? 1.5 : 0.7,
+                                outline: "none",
+                              },
+                              hover: {
+                                fill: resumo ? "#b91c1c" : "#e4e4e7",
+                                stroke: "#18181b",
+                                strokeWidth: 1,
+                                cursor: "pointer",
+                                outline: "none",
+                              },
+                              pressed: {
+                                fill: "#991b1b",
+                                outline: "none",
+                              },
+                            }}
+                          />
+                        )
+                      })
+                    }
+                  </Geographies>
+                </ComposableMap>
+
+                <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white/95 p-3 shadow-sm sm:left-auto sm:w-72">
+                  <span className="text-xs font-black text-zinc-500">Menor</span>
+                  <div className="h-3 flex-1 rounded-full bg-gradient-to-r from-red-100 to-red-600" />
+                  <span className="text-xs font-black text-zinc-500">Maior</span>
+                </div>
+              </div>
+
+              <aside className="border-t border-zinc-200 p-4 sm:p-5 xl:border-l xl:border-t-0">
+                <div className="mb-4 rounded-2xl border border-red-100 bg-red-50 p-3">
+                  <span className="text-[10px] font-black uppercase text-red-700">
+                    {ufMapaSelecionada ? "Selecionada" : "Maior UF"}
+                  </span>
+                  <div className="mt-1 flex items-start justify-between gap-3">
+                    <strong className="text-lg font-black text-zinc-950">
+                      {ufResumoSelecionado?.uf || "--"}
+                    </strong>
+                    <b className="max-w-[160px] break-words text-right text-xs text-zinc-950">
+                      {money(ufResumoSelecionado?.liquido || 0)}
+                    </b>
+                  </div>
+                  <small className="text-zinc-500">
+                    {ufResumoSelecionado?.pis || 0} PIs
+                  </small>
+                </div>
+
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-black text-zinc-950">Top UFs</h3>
+                  <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-black text-zinc-500">
+                    Top {Math.min(rankingMapaUf.length, 6)}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  {rankingMapaUf.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-zinc-200 p-4 text-sm font-semibold text-zinc-500">
+                      Nenhuma UF encontrada.
+                    </div>
+                  ) : (
+                    rankingMapaUf.slice(0, 6).map((item, index) => (
+                      <button
+                        type="button"
+                        key={item.uf}
+                        onClick={() => setUfMapaSelecionada(item.uf)}
+                        className={`flex w-full min-w-0 items-center justify-between gap-3 rounded-2xl border p-3 text-left transition ${
+                          ufMapaSelecionada === item.uf
+                            ? "border-red-300 bg-red-50"
+                            : "border-zinc-100 hover:border-red-200 hover:bg-red-50"
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-black text-red-600">
+                            #{index + 1}
+                          </span>
+                          <strong className="block text-sm font-black text-zinc-950">
+                            {item.uf}
+                          </strong>
+                        </div>
+                        <div className="min-w-0 text-right">
+                          <b className="block max-w-[150px] break-words text-xs text-zinc-950">
+                            {money(item.liquido)}
+                          </b>
+                          <small className="text-zinc-400">{item.pis} PIs</small>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </aside>
+            </div>
           </section>
 
           {temMeta && (
@@ -669,6 +987,49 @@ export default function DashboardExecutivo() {
             </aside>
           </section>
         </>
+      )}
+
+      {mapaTooltip && (
+        <div
+          className="pointer-events-none fixed z-50 w-56 rounded-2xl border border-zinc-200 bg-white p-3 text-sm shadow-xl"
+          style={{
+            left: Math.min(mapaTooltip.x + 14, window.innerWidth - 240),
+            top: Math.max(mapaTooltip.y - 28, 12),
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <span className="text-[10px] font-black uppercase text-zinc-400">
+                Estado
+              </span>
+              <strong className="block text-xl font-black text-zinc-950">
+                {mapaTooltip.uf || "--"}
+              </strong>
+            </div>
+            <span className="rounded-full bg-red-50 px-2 py-1 text-[10px] font-black text-red-700">
+              {baseMapa === "cliente" ? "Cliente" : "Agência"}
+            </span>
+          </div>
+
+          <div className="mt-3 space-y-1 text-xs font-semibold text-zinc-600">
+            <div className="flex justify-between gap-3">
+              <span>Líquido</span>
+              <b className="text-right text-zinc-950">
+                {money(ufResumoTooltip?.liquido || 0)}
+              </b>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span>Bruto</span>
+              <b className="text-right text-zinc-950">
+                {money(ufResumoTooltip?.bruto || 0)}
+              </b>
+            </div>
+            <div className="flex justify-between gap-3">
+              <span>PIs</span>
+              <b className="text-zinc-950">{ufResumoTooltip?.pis || 0}</b>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   )

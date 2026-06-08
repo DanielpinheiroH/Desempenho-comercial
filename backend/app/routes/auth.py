@@ -30,14 +30,17 @@ def login(data: LoginIn):
         (
             user
             for user in usuarios
-            if user["email"].lower() == data.email.lower()
-            and user["senha"] == data.senha
+            if user.get("email", "").lower() == data.email.lower()
+            and user.get("senha", "") == data.senha
         ),
         None,
     )
 
     if not usuario:
-        raise HTTPException(status_code=401, detail="E-mail ou senha inválidos.")
+        raise HTTPException(
+            status_code=401,
+            detail="E-mail ou senha inválidos.",
+        )
 
     token = criar_token(
         {

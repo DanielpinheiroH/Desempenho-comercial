@@ -21,6 +21,10 @@ import AdminSubperfilPisPage from "./pages/admin/AdminSubperfilPisPage.tsx"
 import AdminEntidadesPage from "./pages/admin/AdminEntidadesPage.tsx"
 import VendasDoDia from "./pages/VendasDoDia.tsx"
 import FederalEntidadesPage from "./pages/FederalEntidadesPage.tsx"
+import AdminTopAnunciantesMesPage from "./pages/admin/AdminTopAnunciantesMesPage.tsx"
+import AdminTopAgenciasMesPage from "./pages/admin/AdminTopAgenciasMesPage.tsx"
+import MapaBrasil from "./pages/MapaBrasil.tsx"
+import MapaBrasilUfPis from "./pages/MapaBrasilUfPis.tsx"
 
 import { getUser } from "./services/api"
 
@@ -66,8 +70,30 @@ function App() {
         />
 
         <Route
+          path="/admin/top-anunciantes-mes"
+          element={
+            user?.role === "admin" ? (
+              <AdminTopAnunciantesMesPage />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
           path="/admin/agencias"
           element={<AdminEntidadesPage tipo="agencias" />}
+        />
+
+        <Route
+          path="/admin/top-agencias-mes"
+          element={
+            user?.role === "admin" ? (
+              <AdminTopAgenciasMesPage />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
         />
 
         <Route
@@ -88,6 +114,8 @@ function App() {
         />
 
         <Route path="/busca-pi" element={<BuscaPI />} />
+        <Route path="/mapa-brasil" element={<MapaBrasil />} />
+        <Route path="/mapa-brasil/uf/:uf" element={<MapaBrasilUfPis />} />
         <Route path="/mes/:mes" element={<DetalheMes />} />
         <Route path="/ano/:ano" element={<AnoDetalhePage />} />
         <Route path="/admin/mes/:mes" element={<MesDetalhePage />} />
