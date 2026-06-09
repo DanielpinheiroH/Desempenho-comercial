@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
 
-import { getPisCached } from "../services/api"
+import { getPisCached, getUser } from "../services/api"
+import {
+  classificarAreaComercial,
+  nomeAreaComercial,
+  normalizarTexto,
+  pertenceAoEscopoDjanane,
+  type AreaComercial,
+} from "../utils/areasComerciais"
 
 type Pi = {
   [key: string]: string | number | null | undefined
@@ -103,12 +111,30 @@ function piBateComBusca(numeroPi: string, termo: string) {
 }
 
 export default function BuscaPI() {
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const user = getUser()
   const [dados, setDados] = useState<Pi[]>([])
-  const [busca, setBusca] = useState("")
+  const [busca, setBusca] = useState(() => searchParams.get("busca") || "")
   const [loading, setLoading] = useState(true)
   const [piSelecionado, setPiSelecionado] = useState<Pi | null>(null)
   const [mostrarSugestoes, setMostrarSugestoes] = useState(false)
   const [paginaAtual, setPaginaAtual] = useState(1)
+  const areaSelecionada = (searchParams.get("area") || "") as
+    | AreaComercial
+    | ""
+  const anoSelecionado = searchParams.get("ano") || ""
+  const mesSelecionado = searchParams.get("mes") || ""
+  const executivoSelecionado = searchParams.get("executivo") || ""
+  const origem = searchParams.get("origem") || ""
+  const gruposUsuario = Array.isArray(user?.grupos)
+    ? user.grupos.map((grupo: string) => normalizarTexto(grupo))
+    : []
+  const usuarioEstadual =
+    user?.role === "grupo" && gruposUsuario.includes("estadual")
+  const retornoProdutividade = origem.startsWith("/estadual/executivos")
+    ? origem
+    : ""
 
   async function carregarDados() {
     try {
@@ -131,20 +157,52 @@ export default function BuscaPI() {
 
   useEffect(() => {
     setPaginaAtual(1)
-  }, [busca])
+  }, [
+    busca,
+    areaSelecionada,
+    anoSelecionado,
+    mesSelecionado,
+    executivoSelecionado,
+  ])
+
+  const dadosDoContexto = useMemo(() => {
+    const executivo = normalizarTexto(executivoSelecionado)
+
+    return dados.filter((item) => {
+      const ano = String(item.mes_venda || "").split("/")[1] || ""
+      const bateEscopo =
+        !usuarioEstadual || pertenceAoEscopoDjanane(item)
+      const bateArea =
+        !areaSelecionada ||
+        classificarAreaComercial(item) === areaSelecionada
+      const bateAno = !anoSelecionado || ano === anoSelecionado
+      const bateMes = !mesSelecionado || item.mes_venda === mesSelecionado
+      const bateExecutivo =
+        !executivo || normalizarTexto(item.executivo) === executivo
+
+      return bateEscopo && bateArea && bateAno && bateMes && bateExecutivo
+    })
+  }, [
+    dados,
+    areaSelecionada,
+    anoSelecionado,
+    mesSelecionado,
+    executivoSelecionado,
+    usuarioEstadual,
+  ])
 
   const dadosFiltrados = useMemo(() => {
     const termo = normalizarForte(busca)
 
-    if (!termo) return dados
+    if (!termo) return dadosDoContexto
 
-    return dados.filter((item) => {
+    return dadosDoContexto.filter((item) => {
       const batePi = piBateComBusca(item.numero_pi, busca)
       const bateTexto = textoBuscaPi(item).includes(termo)
 
       return batePi || bateTexto
     })
-  }, [dados, busca])
+  }, [dadosDoContexto, busca])
 
   const totalPaginas = Math.max(
     1,
@@ -163,7 +221,7 @@ export default function BuscaPI() {
 
     if (!termo || termo.length < 2) return []
 
-    return dados
+    return dadosDoContexto
       .filter((item) => {
         const batePi = piBateComBusca(item.numero_pi, busca)
         const bateTexto = textoBuscaPi(item).includes(termo)
@@ -171,7 +229,7 @@ export default function BuscaPI() {
         return batePi || bateTexto
       })
       .slice(0, 50)
-  }, [dados, busca])
+  }, [dadosDoContexto, busca])
 
   const totalLiquido = dadosFiltrados.reduce(
     (acc, item) => acc + Number(item.valor_liquido || 0),
@@ -199,7 +257,7 @@ export default function BuscaPI() {
   )
 
   function selecionarSugestao(item: Pi) {
-    setBusca(String(item.numero_pi || ""))
+    atualizarBusca(String(item.numero_pi || ""))
     setPiSelecionado(item)
     setMostrarSugestoes(false)
     setPaginaAtual(1)
@@ -212,9 +270,41 @@ export default function BuscaPI() {
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
+  function atualizarBusca(value: string) {
+    setBusca(value)
+    const params = new URLSearchParams(searchParams)
+
+    if (value) params.set("busca", value)
+    else params.delete("busca")
+
+    setSearchParams(params, { replace: true })
+  }
+
+  function limparContexto() {
+    setBusca("")
+    setMostrarSugestoes(false)
+    setPaginaAtual(1)
+    setSearchParams({})
+  }
+
+  const possuiContexto =
+    areaSelecionada ||
+    anoSelecionado ||
+    mesSelecionado ||
+    executivoSelecionado
+
   return (
     <main className="space-y-6 text-zinc-950">
       <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+        {retornoProdutividade && (
+          <button
+            type="button"
+            onClick={() => navigate(retornoProdutividade)}
+            className="mb-6 h-10 rounded-xl border border-zinc-200 bg-white px-4 text-sm font-black text-zinc-700 transition hover:border-red-400 hover:text-red-700"
+          >
+            Voltar para produtividade
+          </button>
+        )}
         <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
           Consulta comercial
         </span>
@@ -227,6 +317,41 @@ export default function BuscaPI() {
           Consulte PIs, campanhas, anunciantes, agências, grupos e executivos.
           A busca ignora pontos, traços, barras e acentos.
         </p>
+
+        {possuiContexto && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-zinc-500">
+              Filtros recebidos:
+            </span>
+            {areaSelecionada && (
+              <span className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700">
+                {nomeAreaComercial(areaSelecionada)}
+              </span>
+            )}
+            {anoSelecionado && (
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold">
+                {anoSelecionado}
+              </span>
+            )}
+            {mesSelecionado && (
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold">
+                {mesSelecionado}
+              </span>
+            )}
+            {executivoSelecionado && (
+              <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold">
+                {executivoSelecionado}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={limparContexto}
+              className="text-xs font-black text-red-700 hover:text-red-800"
+            >
+              Remover filtros
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="relative rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
@@ -235,7 +360,7 @@ export default function BuscaPI() {
           placeholder="Buscar PI, cliente, campanha, agência, executivo..."
           value={busca}
           onChange={(e) => {
-            setBusca(e.target.value)
+            atualizarBusca(e.target.value)
             setMostrarSugestoes(true)
           }}
           onFocus={() => setMostrarSugestoes(true)}
@@ -346,7 +471,7 @@ export default function BuscaPI() {
                   <button
                     type="button"
                     onClick={() => {
-                      setBusca("")
+                      atualizarBusca("")
                       setMostrarSugestoes(false)
                       setPaginaAtual(1)
                     }}

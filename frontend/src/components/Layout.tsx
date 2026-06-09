@@ -23,6 +23,8 @@ export default function Layout() {
     user?.role === "admin" ||
     grupos.includes("federal") ||
     grupos.includes("estadual")
+  const ehGestaoEstadual =
+    user?.role === "grupo" && grupos.includes("estadual")
 
   function sair() {
     clearToken()
@@ -60,7 +62,7 @@ export default function Layout() {
 
           <nav className="hidden items-center gap-2 md:flex">
             <NavLink to="/" className={linkClass}>
-              Meu Perfil
+              {ehGestaoEstadual ? "Visão Estadual" : "Meu Perfil"}
             </NavLink>
 
             <NavLink to="/busca-pi" className={linkClass}>
@@ -97,7 +99,7 @@ export default function Layout() {
           <div className="border-t border-white/10 px-4 pb-4 pt-3 md:hidden">
             <div className="space-y-2">
               <NavLink to="/" className={mobileLinkClass} onClick={fecharMenu}>
-                Meu Perfil
+                {ehGestaoEstadual ? "Visão Estadual" : "Meu Perfil"}
               </NavLink>
 
               <NavLink

@@ -25,6 +25,10 @@ import AdminTopAnunciantesMesPage from "./pages/admin/AdminTopAnunciantesMesPage
 import AdminTopAgenciasMesPage from "./pages/admin/AdminTopAgenciasMesPage.tsx"
 import MapaBrasil from "./pages/MapaBrasil.tsx"
 import MapaBrasilUfPis from "./pages/MapaBrasilUfPis.tsx"
+import EstadualAnuncianteDetalhePage from "./pages/EstadualAnuncianteDetalhePage.tsx"
+import EstadualAnunciantesPage from "./pages/EstadualAnunciantesPage.tsx"
+import EstadualAreaPage from "./pages/EstadualAreaPage.tsx"
+import EstadualExecutivosPage from "./pages/EstadualExecutivosPage.tsx"
 
 import { getUser } from "./services/api"
 
@@ -48,6 +52,8 @@ function App() {
     user?.role === "admin" ||
     grupos.includes("federal") ||
     grupos.includes("estadual")
+  const podeVerGestaoEstadual =
+    user?.role === "grupo" && grupos.includes("estadual")
 
   if (!token) {
     return (
@@ -114,6 +120,42 @@ function App() {
         />
 
         <Route path="/busca-pi" element={<BuscaPI />} />
+        <Route
+          path="/estadual/anunciantes"
+          element={
+            podeVerGestaoEstadual ? (
+              <EstadualAnunciantesPage />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+        <Route
+          path="/estadual/anunciantes/:anunciante"
+          element={
+            podeVerGestaoEstadual ? (
+              <EstadualAnuncianteDetalhePage />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+        <Route
+          path="/estadual/area/:area"
+          element={
+            podeVerGestaoEstadual ? <EstadualAreaPage /> : <Navigate to="/" />
+          }
+        />
+        <Route
+          path="/estadual/executivos"
+          element={
+            podeVerGestaoEstadual ? (
+              <EstadualExecutivosPage />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
         <Route path="/mapa-brasil" element={<MapaBrasil />} />
         <Route path="/mapa-brasil/uf/:uf" element={<MapaBrasilUfPis />} />
         <Route path="/mes/:mes" element={<DetalheMes />} />

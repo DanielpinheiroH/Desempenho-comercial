@@ -7,12 +7,16 @@ export const api = axios.create({
 })
 
 let pisCache: unknown[] | null = null
+let pisCacheToken: string | null = null
 
 export function getToken() {
   return localStorage.getItem("token")
 }
 
 export function setToken(token: string) {
+  if (getToken() !== token) {
+    limparPisCache()
+  }
   localStorage.setItem("token", token)
 }
 
@@ -37,11 +41,11 @@ export function clearUser() {
 }
 
 export async function getPisCached() {
-  if (pisCache) {
+  const token = getToken()
+
+  if (pisCache && pisCacheToken === token) {
     return pisCache
   }
-
-  const token = getToken()
 
   const response = await api.get("/api/pis", {
     headers: {
@@ -50,10 +54,12 @@ export async function getPisCached() {
   })
 
   pisCache = Array.isArray(response.data) ? response.data : []
+  pisCacheToken = token
 
   return pisCache
 }
 
 export function limparPisCache() {
   pisCache = null
+  pisCacheToken = null
 }
