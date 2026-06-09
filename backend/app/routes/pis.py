@@ -81,31 +81,29 @@ def eh_federal(item):
     )
 
 
-def eh_estadual(item):
+def classificar_area(item):
     grupo = normalizar(item.get("grupo"))
     perfil = normalizar(item.get("perfil_anunciante"))
     subperfil = normalizar(item.get("sub_perfil_anunciante"))
-    diretoria = normalizar(item.get("diretoria"))
     executivo = normalizar(item.get("executivo"))
 
-    subperfis_gdf = {
-        "gdf - detran",
-        "gdf - terracap",
-        "gdf - secom",
-        "gdf - brb",
-        "gdf - gdf",
-    }
+    if grupo == "federal" or "federal" in perfil or "federal" in subperfil:
+        return "federal"
 
-    return (
-        grupo == "estadual"
-        or "governo estadual" in perfil
-        or "governo estadual" in subperfil
-        or subperfil in subperfis_gdf
-        or "gestao executiva" in perfil
-        or "gestao executiva" in subperfil
-        or "gestao executiva" in diretoria
-        or "gestao executiva" in executivo
-    )
+    if "gestao executiva" in executivo or "gestao executiva" in subperfil:
+        return "gestao-executiva"
+
+    if "gdf" in subperfil or "cldf" in subperfil:
+        return "gdf"
+
+    if grupo == "estadual" or "estadual" in perfil:
+        return "estadual"
+
+    return "privado"
+
+
+def eh_escopo_djanane(item):
+    return classificar_area(item) in {"gestao-executiva", "gdf", "estadual"}
 
 
 def aplicar_regras_comerciais(item):
@@ -177,7 +175,7 @@ def listar_pis(authorization: str | None = Header(default=None)):
                 item
                 for item in dados
                 if ("federal" in grupos_usuario and eh_federal(item))
-                or ("estadual" in grupos_usuario and eh_estadual(item))
+                or ("estadual" in grupos_usuario and eh_escopo_djanane(item))
                 or (
                     normalizar(item.get("grupo")) in grupos_usuario
                     and normalizar(item.get("grupo"))

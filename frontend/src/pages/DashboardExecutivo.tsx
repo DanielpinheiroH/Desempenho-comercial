@@ -127,18 +127,22 @@ function usuarioVeGrupoEstadual(user: any) {
 function classificarPerfilEstadual(item: Pi) {
   const perfil = normalizar(item.perfil_anunciante)
   const subperfil = normalizar(item.sub_perfil_anunciante)
+  const executivo = normalizar(item.executivo)
+  const grupo = normalizar(item.grupo)
 
   if (
-    perfil.includes("gestao executiva") ||
+    executivo.includes("gestao executiva") ||
     subperfil.includes("gestao executiva")
   ) {
     return "gestao-executiva"
   }
 
   if (
+    subperfil.includes("gdf") ||
+    subperfil.includes("cldf") ||
+    grupo === "estadual" ||
     perfil.includes("governo estadual") ||
-    subperfil.includes("governo estadual") ||
-    subperfil.startsWith("gdf -")
+    perfil.includes("estadual")
   ) {
     return "governo-estadual"
   }
@@ -235,7 +239,7 @@ export default function DashboardExecutivo() {
   const executivoAtual = user?.executivo || user?.nome || ""
   const visaoGrupoEstadual = usuarioVeGrupoEstadual(user)
   const escopoLabel = visaoGrupoEstadual
-    ? "Gestão Executiva e Governo Estadual"
+    ? "Gestão Executiva e Governo Estadual / GDF"
     : executivoAtual || "este executivo"
 
   const [dados, setDados] = useState<Pi[]>([])
@@ -526,7 +530,7 @@ export default function DashboardExecutivo() {
         <div>
           <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
             {visaoGrupoEstadual
-              ? "Gestão Executiva + Governo Estadual"
+              ? "Gestão Executiva + Governo Estadual / GDF"
               : "Meu perfil comercial"}
           </span>
 
@@ -536,7 +540,7 @@ export default function DashboardExecutivo() {
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
             {visaoGrupoEstadual
-              ? "Acompanhe todos os PIs, faturamento mensal e desempenho dos perfis Gestão Executiva e Governo Estadual."
+              ? "Acompanhe os mesmos dados do admin para Gestão Executiva, Governo Estadual e GDF, sem Governo Federal e Comercial Privado."
               : "Acompanhe suas vendas, faturamento mensal, desempenho e PIs vinculados ao seu nome."}
           </p>
 
@@ -616,7 +620,7 @@ export default function DashboardExecutivo() {
               }`}
             >
               <span className="block text-sm font-black">
-                Governo Estadual
+                Governo Estadual / GDF
               </span>
               <small className="mt-1 block font-semibold text-zinc-500">
                 {resumoPerfisEstaduais["governo-estadual"]} PIs
