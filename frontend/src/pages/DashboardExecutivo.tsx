@@ -13,12 +13,15 @@ const MAPA_BRASIL_GEO_URL =
   "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson"
 
 type MapaBase = "cliente" | "agencia"
+type PerfilEstadual = "todos" | "gestao-executiva" | "governo-estadual"
 
 type Pi = {
   numero_pi: string
   executivo: string
   anunciante: string
   agencia: string
+  perfil_anunciante?: string | null
+  sub_perfil_anunciante?: string | null
   uf_cliente?: string | null
   uf_agencia?: string | null
   grupo: string
@@ -121,6 +124,28 @@ function usuarioVeGrupoEstadual(user: any) {
   return user?.role === "grupo" && grupos.includes("estadual")
 }
 
+function classificarPerfilEstadual(item: Pi) {
+  const perfil = normalizar(item.perfil_anunciante)
+  const subperfil = normalizar(item.sub_perfil_anunciante)
+
+  if (
+    perfil.includes("gestao executiva") ||
+    subperfil.includes("gestao executiva")
+  ) {
+    return "gestao-executiva"
+  }
+
+  if (
+    perfil.includes("governo estadual") ||
+    subperfil.includes("governo estadual") ||
+    subperfil.startsWith("gdf -")
+  ) {
+    return "governo-estadual"
+  }
+
+  return null
+}
+
 function isAgenciaValida(value?: string | null) {
   const texto = normalizar(value)
 
@@ -210,12 +235,14 @@ export default function DashboardExecutivo() {
   const executivoAtual = user?.executivo || user?.nome || ""
   const visaoGrupoEstadual = usuarioVeGrupoEstadual(user)
   const escopoLabel = visaoGrupoEstadual
-    ? "Governo Estadual"
+    ? "Gestão Executiva e Governo Estadual"
     : executivoAtual || "este executivo"
 
   const [dados, setDados] = useState<Pi[]>([])
   const [metas, setMetas] = useState<Meta[]>([])
   const [busca, setBusca] = useState("")
+  const [perfilEstadual, setPerfilEstadual] =
+    useState<PerfilEstadual>("todos")
   const [loading, setLoading] = useState(true)
   const [anoAberto, setAnoAberto] = useState<string | null>(null)
   const [baseMapa, setBaseMapa] = useState<MapaBase>("cliente")
@@ -262,10 +289,36 @@ export default function DashboardExecutivo() {
     )
   }, [dados, executivoAtual, visaoGrupoEstadual])
 
+  const resumoPerfisEstaduais = useMemo(() => {
+    return dadosDoEscopo.reduce(
+      (resumo, item) => {
+        const perfil = classificarPerfilEstadual(item)
+
+        if (perfil) resumo[perfil] += 1
+
+        return resumo
+      },
+      {
+        "gestao-executiva": 0,
+        "governo-estadual": 0,
+      }
+    )
+  }, [dadosDoEscopo])
+
+  const dadosDoPerfil = useMemo(() => {
+    if (!visaoGrupoEstadual || perfilEstadual === "todos") {
+      return dadosDoEscopo
+    }
+
+    return dadosDoEscopo.filter(
+      (item) => classificarPerfilEstadual(item) === perfilEstadual
+    )
+  }, [dadosDoEscopo, perfilEstadual, visaoGrupoEstadual])
+
   const metasDoEscopo = useMemo(() => {
     if (visaoGrupoEstadual) {
       const executivosPermitidos = new Set(
-        dadosDoEscopo.map((item) => normalizar(item.executivo)).filter(Boolean)
+        dadosDoPerfil.map((item) => normalizar(item.executivo)).filter(Boolean)
       )
 
       return metas.filter((item) =>
@@ -278,14 +331,14 @@ export default function DashboardExecutivo() {
     return metas.filter(
       (item) => normalizar(item.executivo) === executivoNorm
     )
-  }, [dadosDoEscopo, metas, executivoAtual, visaoGrupoEstadual])
+  }, [dadosDoPerfil, metas, executivoAtual, visaoGrupoEstadual])
 
   const dadosFiltrados = useMemo(() => {
     const termo = normalizar(busca)
 
-    if (!termo) return dadosDoEscopo
+    if (!termo) return dadosDoPerfil
 
-    return dadosDoEscopo.filter((item) =>
+    return dadosDoPerfil.filter((item) =>
       normalizar(
         [
           item.numero_pi,
@@ -297,7 +350,7 @@ export default function DashboardExecutivo() {
         ].join(" ")
       ).includes(termo)
     )
-  }, [dadosDoEscopo, busca])
+  }, [dadosDoPerfil, busca])
 
   function metaDoMes(mes: string) {
     return metasDoEscopo
@@ -472,7 +525,9 @@ export default function DashboardExecutivo() {
       <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div>
           <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
-            {visaoGrupoEstadual ? "Governo Estadual" : "Meu perfil comercial"}
+            {visaoGrupoEstadual
+              ? "Gestão Executiva + Governo Estadual"
+              : "Meu perfil comercial"}
           </span>
 
           <h1 className="text-3xl font-black tracking-tight md:text-4xl">
@@ -481,7 +536,7 @@ export default function DashboardExecutivo() {
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
             {visaoGrupoEstadual
-              ? "Acompanhe todos os PIs, faturamento mensal e desempenho do Governo Estadual."
+              ? "Acompanhe todos os PIs, faturamento mensal e desempenho dos perfis Gestão Executiva e Governo Estadual."
               : "Acompanhe suas vendas, faturamento mensal, desempenho e PIs vinculados ao seu nome."}
           </p>
 
@@ -504,6 +559,72 @@ export default function DashboardExecutivo() {
           </div>
         </div>
       </section>
+
+      {visaoGrupoEstadual && (
+        <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <div className="mb-4">
+            <h2 className="text-lg font-black text-zinc-950">
+              Perfil do anunciante
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Visualize os dois perfis juntos ou separadamente.
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => setPerfilEstadual("todos")}
+              className={`min-h-20 rounded-2xl border p-4 text-left transition ${
+                perfilEstadual === "todos"
+                  ? "border-red-600 bg-red-50 text-red-700"
+                  : "border-zinc-200 hover:border-red-300"
+              }`}
+            >
+              <span className="block text-sm font-black">Todos</span>
+              <small className="mt-1 block font-semibold text-zinc-500">
+                {resumoPerfisEstaduais["gestao-executiva"] +
+                  resumoPerfisEstaduais["governo-estadual"]}{" "}
+                PIs nos dois perfis
+              </small>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPerfilEstadual("gestao-executiva")}
+              className={`min-h-20 rounded-2xl border p-4 text-left transition ${
+                perfilEstadual === "gestao-executiva"
+                  ? "border-red-600 bg-red-50 text-red-700"
+                  : "border-zinc-200 hover:border-red-300"
+              }`}
+            >
+              <span className="block text-sm font-black">
+                Gestão Executiva
+              </span>
+              <small className="mt-1 block font-semibold text-zinc-500">
+                {resumoPerfisEstaduais["gestao-executiva"]} PIs
+              </small>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setPerfilEstadual("governo-estadual")}
+              className={`min-h-20 rounded-2xl border p-4 text-left transition ${
+                perfilEstadual === "governo-estadual"
+                  ? "border-red-600 bg-red-50 text-red-700"
+                  : "border-zinc-200 hover:border-red-300"
+              }`}
+            >
+              <span className="block text-sm font-black">
+                Governo Estadual
+              </span>
+              <small className="mt-1 block font-semibold text-zinc-500">
+                {resumoPerfisEstaduais["governo-estadual"]} PIs
+              </small>
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
         <input
@@ -609,7 +730,7 @@ export default function DashboardExecutivo() {
               <div className="min-w-0">
                 <h2 className="text-xl font-black">
                   {visaoGrupoEstadual
-                    ? "Mapa do Governo Estadual"
+                    ? "Mapa dos perfis estaduais"
                     : "Mapa da minha carteira"}
                 </h2>
                 <p className="mt-1 text-sm text-zinc-500">

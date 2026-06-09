@@ -409,7 +409,7 @@ export default function ExecutivoCarteira() {
           <div>
             <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
               {visaoGrupoEstadual
-                ? "Governo Estadual"
+                ? "Gestão Executiva + Governo Estadual"
                 : "Clientes e agências"}
             </span>
 
@@ -419,7 +419,7 @@ export default function ExecutivoCarteira() {
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
               {visaoGrupoEstadual
-                ? "Visualize a carteira completa do Governo Estadual por clientes e agências. Clique em um cliente ou agência para ver todos os PIs vinculados."
+                ? "Visualize a carteira completa dos perfis Gestão Executiva e Governo Estadual por clientes e agências. Clique em um cliente ou agência para ver todos os PIs vinculados."
                 : "Visualize sua carteira completa por clientes e agências. Clique em um cliente ou agência para ver todos os PIs vinculados."}
             </p>
           </div>
