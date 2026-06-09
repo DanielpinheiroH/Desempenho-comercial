@@ -60,6 +60,14 @@ function normalizar(value?: string | null) {
     .toLowerCase()
 }
 
+function usuarioVeGrupoEstadual(user: any) {
+  const grupos = Array.isArray(user?.grupos)
+    ? user.grupos.map((grupo: string) => normalizar(grupo))
+    : []
+
+  return user?.role === "grupo" && grupos.includes("estadual")
+}
+
 function getMesAno(value?: string) {
   const [mes, ano] = String(value || "").split("/")
   return { mes, ano }
@@ -240,6 +248,7 @@ export default function ExecutivoCarteira() {
   const navigate = useNavigate()
   const user = getUser()
   const executivoAtual = user?.executivo || user?.nome || ""
+  const visaoGrupoEstadual = usuarioVeGrupoEstadual(user)
 
   const [dados, setDados] = useState<Pi[]>([])
   const [loading, setLoading] = useState(true)
@@ -277,23 +286,25 @@ export default function ExecutivoCarteira() {
     carregarDados()
   }, [])
 
-  const dadosExecutivo = useMemo(() => {
+  const dadosEscopo = useMemo(() => {
+    if (visaoGrupoEstadual) return dados
+
     const executivoNorm = normalizar(executivoAtual)
 
     return dados.filter(
       (item) => normalizar(item.executivo) === executivoNorm
     )
-  }, [dados, executivoAtual])
+  }, [dados, executivoAtual, visaoGrupoEstadual])
 
   const anos = useMemo(() => {
     return Array.from(
       new Set(
-        dadosExecutivo
+        dadosEscopo
           .map((item) => getMesAno(item.mes_venda).ano)
           .filter(Boolean)
       )
     ).sort((a, b) => Number(b) - Number(a))
-  }, [dadosExecutivo])
+  }, [dadosEscopo])
 
   function toggleMes(mes: string) {
     setMesesSelecionados((atual) =>
@@ -314,7 +325,7 @@ export default function ExecutivoCarteira() {
   const dadosFiltrados = useMemo(() => {
     const termo = normalizar(busca)
 
-    return dadosExecutivo.filter((item) => {
+    return dadosEscopo.filter((item) => {
       const { mes, ano } = getMesAno(item.mes_venda)
 
       const bateAno = !anoSelecionado || ano === anoSelecionado
@@ -340,7 +351,7 @@ export default function ExecutivoCarteira() {
 
       return bateAno && bateMes && bateBusca
     })
-  }, [dadosExecutivo, busca, anoSelecionado, mesesSelecionados])
+  }, [dadosEscopo, busca, anoSelecionado, mesesSelecionados])
 
   const clientes = useMemo(
     () => gerarLista(dadosFiltrados, "anunciante", false, ordenacao),
@@ -397,7 +408,9 @@ export default function ExecutivoCarteira() {
         <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-center">
           <div>
             <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
-              Clientes e agências
+              {visaoGrupoEstadual
+                ? "Governo Estadual"
+                : "Clientes e agências"}
             </span>
 
             <h1 className="text-3xl font-black tracking-tight md:text-4xl">
@@ -405,8 +418,9 @@ export default function ExecutivoCarteira() {
             </h1>
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
-              Visualize sua carteira completa por clientes e agências. Clique em
-              um cliente ou agência para ver todos os PIs vinculados.
+              {visaoGrupoEstadual
+                ? "Visualize a carteira completa do Governo Estadual por clientes e agências. Clique em um cliente ou agência para ver todos os PIs vinculados."
+                : "Visualize sua carteira completa por clientes e agências. Clique em um cliente ou agência para ver todos os PIs vinculados."}
             </p>
           </div>
 

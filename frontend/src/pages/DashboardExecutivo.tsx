@@ -113,6 +113,14 @@ function normalizar(value?: string | null) {
     .toLowerCase()
 }
 
+function usuarioVeGrupoEstadual(user: any) {
+  const grupos = Array.isArray(user?.grupos)
+    ? user.grupos.map((grupo: string) => normalizar(grupo))
+    : []
+
+  return user?.role === "grupo" && grupos.includes("estadual")
+}
+
 function isAgenciaValida(value?: string | null) {
   const texto = normalizar(value)
 
@@ -200,6 +208,10 @@ export default function DashboardExecutivo() {
   const navigate = useNavigate()
   const user = getUser()
   const executivoAtual = user?.executivo || user?.nome || ""
+  const visaoGrupoEstadual = usuarioVeGrupoEstadual(user)
+  const escopoLabel = visaoGrupoEstadual
+    ? "Governo Estadual"
+    : executivoAtual || "este executivo"
 
   const [dados, setDados] = useState<Pi[]>([])
   const [metas, setMetas] = useState<Meta[]>([])
@@ -240,28 +252,40 @@ export default function DashboardExecutivo() {
     carregarDados()
   }, [])
 
-  const dadosDoExecutivo = useMemo(() => {
+  const dadosDoEscopo = useMemo(() => {
+    if (visaoGrupoEstadual) return dados
+
     const executivoNorm = normalizar(executivoAtual)
 
     return dados.filter(
       (item) => normalizar(item.executivo) === executivoNorm
     )
-  }, [dados, executivoAtual])
+  }, [dados, executivoAtual, visaoGrupoEstadual])
 
-  const metasDoExecutivo = useMemo(() => {
+  const metasDoEscopo = useMemo(() => {
+    if (visaoGrupoEstadual) {
+      const executivosPermitidos = new Set(
+        dadosDoEscopo.map((item) => normalizar(item.executivo)).filter(Boolean)
+      )
+
+      return metas.filter((item) =>
+        executivosPermitidos.has(normalizar(item.executivo))
+      )
+    }
+
     const executivoNorm = normalizar(executivoAtual)
 
     return metas.filter(
       (item) => normalizar(item.executivo) === executivoNorm
     )
-  }, [metas, executivoAtual])
+  }, [dadosDoEscopo, metas, executivoAtual, visaoGrupoEstadual])
 
   const dadosFiltrados = useMemo(() => {
     const termo = normalizar(busca)
 
-    if (!termo) return dadosDoExecutivo
+    if (!termo) return dadosDoEscopo
 
-    return dadosDoExecutivo.filter((item) =>
+    return dadosDoEscopo.filter((item) =>
       normalizar(
         [
           item.numero_pi,
@@ -273,10 +297,10 @@ export default function DashboardExecutivo() {
         ].join(" ")
       ).includes(termo)
     )
-  }, [dadosDoExecutivo, busca])
+  }, [dadosDoEscopo, busca])
 
   function metaDoMes(mes: string) {
-    return metasDoExecutivo
+    return metasDoEscopo
       .filter((meta) => meta.mes === mes)
       .reduce((acc, meta) => acc + Number(meta.meta || 0), 0)
   }
@@ -311,7 +335,7 @@ export default function DashboardExecutivo() {
         if (a.ano !== b.ano) return Number(b.ano) - Number(a.ano)
         return a.mesNumero - b.mesNumero
       })
-  }, [dadosFiltrados, metasDoExecutivo])
+  }, [dadosFiltrados, metasDoEscopo])
 
   const faturamentoPorAno = useMemo(() => {
     const mapa = new Map<string, AnoResumo>()
@@ -448,7 +472,7 @@ export default function DashboardExecutivo() {
       <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
         <div>
           <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
-            Meu perfil comercial
+            {visaoGrupoEstadual ? "Governo Estadual" : "Meu perfil comercial"}
           </span>
 
           <h1 className="text-3xl font-black tracking-tight md:text-4xl">
@@ -456,8 +480,9 @@ export default function DashboardExecutivo() {
           </h1>
 
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
-            Acompanhe suas vendas, faturamento mensal, desempenho e PIs
-            vinculados ao seu nome.
+            {visaoGrupoEstadual
+              ? "Acompanhe todos os PIs, faturamento mensal e desempenho do Governo Estadual."
+              : "Acompanhe suas vendas, faturamento mensal, desempenho e PIs vinculados ao seu nome."}
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -582,9 +607,13 @@ export default function DashboardExecutivo() {
           <section className="overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-sm">
             <div className="flex flex-col gap-4 border-b border-zinc-200 p-5 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0">
-                <h2 className="text-xl font-black">Mapa da minha carteira</h2>
+                <h2 className="text-xl font-black">
+                  {visaoGrupoEstadual
+                    ? "Mapa do Governo Estadual"
+                    : "Mapa da minha carteira"}
+                </h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  Valores por UF considerando apenas os PIs vinculados a {executivoAtual || "este executivo"}.
+                  Valores por UF considerando apenas os PIs vinculados a {escopoLabel}.
                 </p>
               </div>
 

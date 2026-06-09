@@ -1,4 +1,5 @@
 import json
+import unicodedata
 from pathlib import Path
 from fastapi import APIRouter, Header, HTTPException
 
@@ -12,7 +13,7 @@ DATA_PATH = BASE_DIR / "data" / "dados.json"
 DADOS_CACHE = None
 
 
-def normalizar(valor):
+def normalizar_legado(valor):
     return (
         str(valor or "")
         .strip()
@@ -29,6 +30,30 @@ def normalizar(valor):
         .replace("õ", "o")
         .replace("ú", "u")
         .replace("ç", "c")
+    )
+
+
+def normalizar(valor):
+    texto = str(valor or "").strip().lower()
+    texto = "".join(
+        char
+        for char in unicodedata.normalize("NFD", texto)
+        if unicodedata.category(char) != "Mn"
+    )
+
+    return (
+        texto.replace("Ã¡", "a")
+        .replace("Ã ", "a")
+        .replace("Ã£", "a")
+        .replace("Ã¢", "a")
+        .replace("Ã©", "e")
+        .replace("Ãª", "e")
+        .replace("Ã­", "i")
+        .replace("Ã³", "o")
+        .replace("Ã´", "o")
+        .replace("Ãµ", "o")
+        .replace("Ãº", "u")
+        .replace("Ã§", "c")
     )
 
 
@@ -53,6 +78,33 @@ def eh_federal(item):
         or "federal" in diretoria
         or "atendimento gov federal" in perfil
         or "atendimento gov federal" in subperfil
+    )
+
+
+def eh_estadual(item):
+    grupo = normalizar(item.get("grupo"))
+    perfil = normalizar(item.get("perfil_anunciante"))
+    subperfil = normalizar(item.get("sub_perfil_anunciante"))
+    diretoria = normalizar(item.get("diretoria"))
+    executivo = normalizar(item.get("executivo"))
+
+    subperfis_gdf = {
+        "gdf - detran",
+        "gdf - terracap",
+        "gdf - secom",
+        "gdf - brb",
+        "gdf - gdf",
+    }
+
+    return (
+        grupo == "estadual"
+        or "governo estadual" in perfil
+        or "governo estadual" in subperfil
+        or subperfil in subperfis_gdf
+        or "gestao executiva" in perfil
+        or "gestao executiva" in subperfil
+        or "gestao executiva" in diretoria
+        or "gestao executiva" in executivo
     )
 
 
@@ -118,11 +170,20 @@ def listar_pis(authorization: str | None = Header(default=None)):
     if role == "admin":
         return dados
 
-    # Gestores e usuários de grupo veem tudo do grupo.
-    # Se tiver federal nos grupos, vê TODOS os PIs federais.
+    # Gestores e usuários de grupo veem tudo do escopo comercial permitido.
     if role in ["gestor", "grupo"]:
-        if "federal" in grupos_usuario:
-            return [item for item in dados if eh_federal(item)]
+        if "federal" in grupos_usuario or "estadual" in grupos_usuario:
+            return [
+                item
+                for item in dados
+                if ("federal" in grupos_usuario and eh_federal(item))
+                or ("estadual" in grupos_usuario and eh_estadual(item))
+                or (
+                    normalizar(item.get("grupo")) in grupos_usuario
+                    and normalizar(item.get("grupo"))
+                    not in ["federal", "estadual"]
+                )
+            ]
 
         return [
             item
