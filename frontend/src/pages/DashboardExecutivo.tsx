@@ -59,6 +59,16 @@ type AnoResumo = {
   meses: MesResumo[]
 }
 
+type TrimestreResumo = {
+  chave: string
+  ano: string
+  trimestre: number
+  total: number
+  meta: number
+  quantidade: number
+  meses: MesResumo[]
+}
+
 type MapaUfResumo = {
   uf: string
   liquido: number
@@ -205,13 +215,6 @@ function getUf(item: Pi, baseMapa: MapaBase) {
   return String(value || "").trim().toUpperCase()
 }
 
-function mesParaReferencia(mes: string) {
-  const mesNumero = getMesNumero(mes)
-  const ano = getAno(mes)
-
-  return Number(`${ano}${String(mesNumero).padStart(2, "0")}`)
-}
-
 function statusMeta(percentual: number) {
   if (percentual >= 100) {
     return {
@@ -255,6 +258,7 @@ export default function DashboardExecutivo() {
     useState<PerfilEstadual>("todos")
   const [loading, setLoading] = useState(true)
   const [anoAberto, setAnoAberto] = useState<string | null>(null)
+  const [trimestreSelecionado, setTrimestreSelecionado] = useState("")
   const [baseMapa, setBaseMapa] = useState<MapaBase>("cliente")
   const [ufMapaSelecionada, setUfMapaSelecionada] = useState("")
   const [mapaTooltip, setMapaTooltip] = useState<MapaTooltip | null>(null)
@@ -425,6 +429,96 @@ export default function DashboardExecutivo() {
     )
   }, [faturamentoPorMes])
 
+  const faturamentoPorTrimestre = useMemo(() => {
+    const meses = new Map<string, MesResumo>()
+
+    metasDoEscopo.forEach((item) => {
+      const mes = item.mes
+      if (!mes) return
+
+      const atual = meses.get(mes) || {
+        mes,
+        ano: getAno(mes),
+        mesNumero: getMesNumero(mes),
+        total: 0,
+        quantidade: 0,
+        meta: 0,
+      }
+
+      atual.meta += Number(item.meta || 0)
+      meses.set(mes, atual)
+    })
+
+    dadosFiltrados.forEach((item) => {
+      const mes = item.mes_venda
+      if (!mes) return
+
+      const atual = meses.get(mes) || {
+        mes,
+        ano: getAno(mes),
+        mesNumero: getMesNumero(mes),
+        total: 0,
+        quantidade: 0,
+        meta: 0,
+      }
+
+      atual.total += Number(item.valor_liquido || 0)
+      atual.quantidade += 1
+      meses.set(mes, atual)
+    })
+
+    const trimestres = new Map<string, TrimestreResumo>()
+
+    meses.forEach((mes) => {
+      if (!mes.ano || !mes.mesNumero) return
+
+      const trimestre = Math.ceil(mes.mesNumero / 3)
+      const chave = `${mes.ano}-${trimestre}`
+      const atual = trimestres.get(chave) || {
+        chave,
+        ano: mes.ano,
+        trimestre,
+        total: 0,
+        meta: 0,
+        quantidade: 0,
+        meses: [],
+      }
+
+      atual.total += mes.total
+      atual.meta += mes.meta
+      atual.quantidade += mes.quantidade
+      atual.meses.push(mes)
+      trimestres.set(chave, atual)
+    })
+
+    return Array.from(trimestres.values())
+      .filter((item) => item.meta > 0)
+      .map((item) => ({
+        ...item,
+        meses: item.meses.sort((a, b) => a.mesNumero - b.mesNumero),
+      }))
+      .sort(
+        (a, b) =>
+          Number(b.ano) - Number(a.ano) || b.trimestre - a.trimestre
+      )
+  }, [dadosFiltrados, metasDoEscopo])
+
+  useEffect(() => {
+    if (
+      faturamentoPorTrimestre.length > 0 &&
+      !faturamentoPorTrimestre.some(
+        (item) => item.chave === trimestreSelecionado
+      )
+    ) {
+      setTrimestreSelecionado(faturamentoPorTrimestre[0].chave)
+    }
+  }, [faturamentoPorTrimestre, trimestreSelecionado])
+
+  const trimestreAtual =
+    faturamentoPorTrimestre.find(
+      (item) => item.chave === trimestreSelecionado
+    ) || faturamentoPorTrimestre[0]
+
   const totalLiquido = dadosFiltrados.reduce(
     (acc, item) => acc + Number(item.valor_liquido || 0),
     0
@@ -493,31 +587,6 @@ export default function DashboardExecutivo() {
       .range(["#fee2e2", "#dc2626"])
       .clamp(true)
   }, [maiorValorMapa])
-
-  const mesesComMeta = faturamentoPorMes.filter(
-    (item) => Number(item.meta || 0) > 0
-  )
-
-  const primeiroMesComMeta = [...mesesComMeta].sort(
-    (a, b) => mesParaReferencia(a.mes) - mesParaReferencia(b.mes)
-  )[0]
-
-  const referenciaMeta = primeiroMesComMeta
-    ? mesParaReferencia(primeiroMesComMeta.mes)
-    : 0
-
-  const metaTotal = mesesComMeta.reduce(
-    (acc, item) => acc + Number(item.meta || 0),
-    0
-  )
-
-  const realizadoPeriodoMeta = dadosFiltrados
-    .filter((item) => mesParaReferencia(item.mes_venda) >= referenciaMeta)
-    .reduce((acc, item) => acc + Number(item.valor_liquido || 0), 0)
-
-  const temMeta = mesesComMeta.length > 0
-  const percentualMeta = temMeta ? (realizadoPeriodoMeta / metaTotal) * 100 : 0
-  const statusGeral = statusMeta(percentualMeta)
 
   const melhorAno = faturamentoPorAno[0]
   const melhorMes = [...faturamentoPorMes].sort((a, b) => b.total - a.total)[0]
@@ -946,39 +1015,156 @@ export default function DashboardExecutivo() {
             </div>
           </section>
 
-          {temMeta && (
+          {faturamentoPorTrimestre.length > 0 && (
             <section className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
-              <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
                   <h2 className="text-xl font-black text-zinc-950">
-                    Meta no período cadastrado
+                    Meta trimestral
                   </h2>
-
                   <p className="mt-1 text-sm text-zinc-500">
-                    Comparação a partir de{" "}
-                    <strong className="text-zinc-800">
-                      {primeiroMesComMeta?.mes}
-                    </strong>
-                    : {money(realizadoPeriodoMeta)} realizado de{" "}
-                    {money(metaTotal)}.
+                    Selecione um trimestre para acompanhar meta e resultado.
                   </p>
                 </div>
 
-                <strong
-                  className={`text-2xl font-black ${statusGeral.className}`}
+                <select
+                  value={trimestreSelecionado}
+                  onChange={(event) =>
+                    setTrimestreSelecionado(event.target.value)
+                  }
+                  className="h-11 w-full rounded-xl border border-zinc-200 bg-white px-4 text-sm font-bold text-zinc-700 md:w-52"
                 >
-                  {percentualMeta.toFixed(1)}% • {statusGeral.label}
-                </strong>
+                  {faturamentoPorTrimestre.map((item) => (
+                    <option key={item.chave} value={item.chave}>
+                      {item.trimestre}º trimestre de {item.ano}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              <div className="h-3 overflow-hidden rounded-full bg-zinc-100">
-                <div
-                  className={`h-full rounded-full ${statusGeral.bar}`}
-                  style={{
-                    width: `${Math.min(percentualMeta, 100)}%`,
-                  }}
-                />
-              </div>
+              {trimestreAtual &&
+                (() => {
+                  const percentual =
+                    trimestreAtual.meta > 0
+                      ? (trimestreAtual.total / trimestreAtual.meta) * 100
+                      : 0
+                  const falta = Math.max(
+                    trimestreAtual.meta - trimestreAtual.total,
+                    0
+                  )
+                  const status = statusMeta(percentual)
+
+                  return (
+                    <div className="mt-5 overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50">
+                      <div className="grid gap-4 p-4 sm:grid-cols-[1fr_auto] sm:items-center sm:p-5">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <strong className="text-lg font-black">
+                              {trimestreAtual.trimestre}º trimestre de{" "}
+                              {trimestreAtual.ano}
+                            </strong>
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-black ${status.badge}`}
+                            >
+                              {percentual.toFixed(1)}%
+                            </span>
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                            <span>
+                              Meta:{" "}
+                              <b>{money(trimestreAtual.meta)}</b>
+                            </span>
+                            <span>
+                              Vendido:{" "}
+                              <b className="text-red-700">
+                                {money(trimestreAtual.total)}
+                              </b>
+                            </span>
+                            <span>
+                              {falta > 0 ? "Falta: " : "Meta superada: "}
+                              <b>
+                                {money(
+                                  falta > 0
+                                    ? falta
+                                    : trimestreAtual.total -
+                                        trimestreAtual.meta
+                                )}
+                              </b>
+                            </span>
+                          </div>
+
+                          <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-200">
+                            <div
+                              className={`h-full rounded-full ${status.bar}`}
+                              style={{
+                                width: `${Math.min(percentual, 100)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <small className="font-bold text-zinc-500">
+                          {trimestreAtual.quantidade} PIs
+                        </small>
+                      </div>
+
+                      <div className="border-t border-zinc-200 bg-white p-4">
+                        <div className="grid gap-3 md:grid-cols-3">
+                          {trimestreAtual.meses.map((mes) => {
+                            const percentualMes =
+                              mes.meta > 0 ? (mes.total / mes.meta) * 100 : 0
+                            const statusMes = statusMeta(percentualMes)
+
+                            return (
+                              <button
+                                type="button"
+                                key={mes.mes}
+                                onClick={() => abrirMes(mes.mes)}
+                                className="rounded-xl border border-zinc-200 p-4 text-left transition hover:border-red-300 hover:bg-red-50"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <strong className="text-base font-black">
+                                    {mes.mes}
+                                  </strong>
+                                  <span
+                                    className={`rounded-full px-2 py-1 text-[10px] font-black ${statusMes.badge}`}
+                                  >
+                                    {mes.meta > 0
+                                      ? `${percentualMes.toFixed(1)}%`
+                                      : "Sem meta"}
+                                  </span>
+                                </div>
+
+                                <div className="mt-3 space-y-1 text-sm">
+                                  <div className="flex justify-between gap-3">
+                                    <span className="text-zinc-500">Vendido</span>
+                                    <b className="text-red-700">
+                                      {money(mes.total)}
+                                    </b>
+                                  </div>
+                                  <div className="flex justify-between gap-3">
+                                    <span className="text-zinc-500">Meta</span>
+                                    <b>{money(mes.meta)}</b>
+                                  </div>
+                                </div>
+
+                                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-zinc-200">
+                                  <div
+                                    className={`h-full rounded-full ${statusMes.bar}`}
+                                    style={{
+                                      width: `${Math.min(percentualMes, 100)}%`,
+                                    }}
+                                  />
+                                </div>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
             </section>
           )}
 
