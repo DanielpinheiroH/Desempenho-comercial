@@ -132,9 +132,11 @@ export default function BuscaPI() {
     : []
   const usuarioEstadual =
     user?.role === "grupo" && gruposUsuario.includes("estadual")
-  const retornoProdutividade = origem.startsWith("/estadual/executivos")
-    ? origem
-    : ""
+  const retornoProdutividade =
+    origem.startsWith("/estadual/executivos") ||
+    origem.startsWith("/admin/produtividade-executivos")
+      ? origem
+      : ""
 
   async function carregarDados() {
     try {

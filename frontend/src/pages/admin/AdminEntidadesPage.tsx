@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { getPisCached } from "../../services/api"
 
 type Pi = {
+  [key: string]: string | number | boolean | null | undefined
   numero_pi: string
   executivo: string
   anunciante: string
@@ -54,6 +55,18 @@ function getMesNumero(mes?: string) {
   return String(mes || "").split("/")[0] || "Sem mês"
 }
 
+function ordemMes(mes?: string) {
+  const [numeroMes, ano] = String(mes || "").split("/")
+  const mesNumerico = Number(numeroMes)
+  const anoNumerico = Number(ano)
+
+  if (!Number.isFinite(mesNumerico) || !Number.isFinite(anoNumerico)) {
+    return 0
+  }
+
+  return anoNumerico * 100 + mesNumerico
+}
+
 function nomeMes(numero: string) {
   const nomes: Record<string, string> = {
     "01": "Janeiro",
@@ -94,6 +107,7 @@ export default function AdminEntidadesPage({ tipo }: Props) {
   const [anoSelecionado, setAnoSelecionado] = useState("")
   const [mesSelecionado, setMesSelecionado] = useState("")
   const [entidadeAberta, setEntidadeAberta] = useState<string | null>(null)
+  const [piSelecionado, setPiSelecionado] = useState<Pi | null>(null)
 
   const titulo = tipo === "agencias" ? "Agências" : "Anunciantes"
   const singular = tipo === "agencias" ? "agência" : "anunciante"
@@ -190,8 +204,15 @@ export default function AdminEntidadesPage({ tipo }: Props) {
       mapa.set(nome, atual)
     })
 
-    return Array.from(mapa.values()).sort((a, b) => b.liquido - a.liquido)
-  }, [dadosFiltrados, campo])
+    return Array.from(mapa.values())
+      .map((entidade) => ({
+        ...entidade,
+        itens: [...entidade.itens].sort(
+          (a, b) => ordemMes(b.mes_venda) - ordemMes(a.mes_venda)
+        ),
+      }))
+      .sort((a, b) => b.liquido - a.liquido)
+  }, [dadosFiltrados, campo, tipo])
 
   const totalLiquido = entidades.reduce((acc, item) => acc + item.liquido, 0)
   const totalBruto = entidades.reduce((acc, item) => acc + item.bruto, 0)
@@ -201,6 +222,23 @@ export default function AdminEntidadesPage({ tipo }: Props) {
     setAnoSelecionado(value)
     setMesSelecionado("")
   }
+
+  useEffect(() => {
+    if (!piSelecionado) return
+
+    function fecharComEsc(event: KeyboardEvent) {
+      if (event.key === "Escape") setPiSelecionado(null)
+    }
+
+    const overflowAnterior = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", fecharComEsc)
+
+    return () => {
+      document.body.style.overflow = overflowAnterior
+      window.removeEventListener("keydown", fecharComEsc)
+    }
+  }, [piSelecionado])
 
   function limparFiltros() {
     setBusca("")
@@ -403,9 +441,7 @@ export default function AdminEntidadesPage({ tipo }: Props) {
                                 <tr
                                   key={`${pi.numero_pi}-${piIndex}`}
                                   className="cursor-pointer border-b border-zinc-100 hover:bg-red-50"
-                                  onClick={() =>
-                                    navigate(`/admin/mes/${pi.mes_venda.replace("/", "-")}`)
-                                  }
+                                  onClick={() => setPiSelecionado(pi)}
                                 >
                                   <td className="px-4 py-3 font-black text-red-600">
                                     {pi.numero_pi}
@@ -448,7 +484,117 @@ export default function AdminEntidadesPage({ tipo }: Props) {
           </div>
         </section>
       )}
+
+      {piSelecionado && (
+        <PiModal
+          pi={piSelecionado}
+          onClose={() => setPiSelecionado(null)}
+        />
+      )}
     </main>
+  )
+}
+
+function rotuloCampo(campo: string) {
+  const rotulos: Record<string, string> = {
+    numero_pi: "Número PI",
+    pi_matriz: "PI Matriz",
+    valor_bruto: "Valor Bruto",
+    valor_liquido: "Valor Líquido",
+    mes_venda: "Mês da Venda",
+    mes_inicial_veiculacao: "Mês Inicial de Veiculação",
+    perfil_anunciante: "Perfil do Anunciante",
+    sub_perfil_anunciante: "Subperfil do Anunciante",
+    razao_social_anunciante: "Razão Social do Anunciante",
+    razao_social_agencia: "Razão Social da Agência",
+    cnpj_anunciante: "CNPJ do Anunciante",
+    cnpj_agencia: "CNPJ da Agência",
+    uf_cliente: "UF do Cliente",
+    uf_agencia: "UF da Agência",
+  }
+
+  return (
+    rotulos[campo] ||
+    campo
+      .replaceAll("_", " ")
+      .replace(/\b\w/g, (letra) => letra.toUpperCase())
+  )
+}
+
+function valorCampo(campo: string, valor: string | number | boolean) {
+  if (
+    typeof valor === "number" &&
+    (campo.includes("valor") || campo.includes("faturamento"))
+  ) {
+    return money(valor)
+  }
+
+  if (typeof valor === "boolean") return valor ? "Sim" : "Não"
+  return String(valor)
+}
+
+function PiModal({ pi, onClose }: { pi: Pi; onClose: () => void }) {
+  const campos = Object.entries(pi).filter(
+    ([, valor]) => valor !== null && valor !== undefined && String(valor).trim()
+  )
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/75 p-3 backdrop-blur-sm sm:p-6"
+      onMouseDown={onClose}
+      role="presentation"
+    >
+      <section
+        className="max-h-[92vh] w-full max-w-6xl overflow-y-auto rounded-2xl border border-zinc-700 bg-white shadow-2xl sm:rounded-[2rem]"
+        onMouseDown={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pi-modal-title"
+      >
+        <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-zinc-800 bg-gradient-to-br from-zinc-950 via-zinc-950 to-red-950 p-5 text-white sm:p-7">
+          <div className="min-w-0">
+            <span className="text-xs font-black uppercase tracking-wider text-red-300">
+              Informações completas
+            </span>
+            <h2
+              id="pi-modal-title"
+              className="mt-2 break-words text-2xl font-black sm:text-3xl"
+            >
+              PI {pi.numero_pi || "-"}
+            </h2>
+            <p className="mt-1 text-sm text-zinc-300">
+              {pi.anunciante || "Anunciante não informado"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-black transition hover:bg-white/20"
+          >
+            Fechar
+          </button>
+        </header>
+
+        <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3 xl:grid-cols-4">
+          {campos.map(([campo, valor]) => (
+            <div
+              key={campo}
+              className={`rounded-2xl border border-zinc-200 bg-zinc-50 p-4 ${
+                campo === "observacoes" ? "sm:col-span-2 lg:col-span-3 xl:col-span-4" : ""
+              }`}
+            >
+              <span className="block text-[10px] font-black uppercase tracking-wide text-zinc-500">
+                {rotuloCampo(campo)}
+              </span>
+              <strong className="mt-2 block break-words text-sm font-bold text-zinc-900">
+                {valorCampo(campo, valor as string | number | boolean)}
+              </strong>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
   )
 }
 

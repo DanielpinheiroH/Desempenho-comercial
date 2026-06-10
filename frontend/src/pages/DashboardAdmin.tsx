@@ -734,7 +734,7 @@ export default function DashboardAdmin() {
             />
           </section>
 
-          <section className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <ActionCard
               label="Anunciantes"
               title={String(totalAnunciantes)}
@@ -761,6 +761,13 @@ export default function DashboardAdmin() {
               title="Abrir mapa"
               helper="Investimentos por UF"
               onClick={() => navigate("/mapa-brasil")}
+            />
+
+            <ActionCard
+              label="Produtividade"
+              title="Ver executivos"
+              helper="Somente Comercial Privado"
+              onClick={() => navigate("/admin/produtividade-executivos")}
             />
           </section>
 

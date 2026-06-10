@@ -103,6 +103,17 @@ function App() {
         />
 
         <Route
+          path="/admin/produtividade-executivos"
+          element={
+            user?.role === "admin" ? (
+              <EstadualExecutivosPage escopo="privado" />
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
+
+        <Route
           path="/vendas-do-dia"
           element={
             podeVerVendasDoDia ? <VendasDoDia /> : <Navigate to="/" />

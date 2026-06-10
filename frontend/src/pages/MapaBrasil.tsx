@@ -131,7 +131,7 @@ function nomeMes(numero: string) {
   const nomes: Record<string, string> = {
     "01": "Janeiro",
     "02": "Fevereiro",
-    "03": "MarÃ§o",
+    "03": "Março",
     "04": "Abril",
     "05": "Maio",
     "06": "Junho",
@@ -203,7 +203,7 @@ export default function MapaBrasil() {
       } catch (error) {
         console.error(error)
         setDados([])
-        setErro("NÃ£o foi possÃ­vel carregar os dados comerciais.")
+        setErro("Não foi possível carregar os dados comerciais.")
       } finally {
         setLoading(false)
       }
@@ -387,8 +387,16 @@ export default function MapaBrasil() {
   return (
     <main className="min-h-screen w-full max-w-full overflow-x-hidden bg-zinc-100 p-4 text-zinc-950 sm:p-6 lg:p-8">
       <div className="mx-auto flex w-full max-w-[96rem] flex-col gap-5">
-        <section className="overflow-hidden rounded-[1.5rem] bg-zinc-950 text-white shadow-sm md:rounded-[2rem]">
+        <section className="overflow-hidden rounded-[1.5rem] border border-zinc-800 bg-gradient-to-br from-zinc-950 via-zinc-950 to-red-950 text-white shadow-sm md:rounded-[2rem]">
           <div className="p-5 sm:p-7 lg:p-8">
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="mb-5 rounded-2xl border border-white/10 bg-white/10 px-4 py-2 text-sm font-black text-white transition hover:border-red-400/60 hover:bg-white/15"
+            >
+              ← Voltar ao dashboard
+            </button>
+
             <span className="inline-flex rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-red-100">
               Desempenho Comercial
             </span>
@@ -399,8 +407,8 @@ export default function MapaBrasil() {
                   Mapa do Brasil
                 </h1>
                 <p className="mt-2 max-w-3xl break-words text-sm leading-6 text-zinc-300 sm:text-base">
-                  VisualizaÃ§Ã£o geogrÃ¡fica dos investimentos e faturamentos por
-                  estado, com leitura por UF do cliente ou da agÃªncia.
+                  Visualização geográfica dos investimentos e faturamentos por
+                  estado, com leitura por UF do cliente ou da agência.
                 </p>
               </div>
 
@@ -425,7 +433,7 @@ export default function MapaBrasil() {
                       : "text-zinc-200 hover:bg-white/10"
                   }`}
                 >
-                  AgÃªncia
+                  Agência
                 </button>
               </div>
             </div>
@@ -434,7 +442,7 @@ export default function MapaBrasil() {
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
-            label="Valor LÃ­quido Total"
+            label="Valor Líquido Total"
             value={money(totais.liquido)}
             variant="red"
           />
@@ -448,7 +456,7 @@ export default function MapaBrasil() {
             <div className="min-w-0">
               <h2 className="text-lg font-black">Filtros</h2>
               <p className="text-sm text-zinc-500">
-                Refine o mapa por perÃ­odo, perfil e subperfil.
+                Refine o mapa por período, perfil e subperfil.
               </p>
             </div>
 
@@ -472,7 +480,7 @@ export default function MapaBrasil() {
               placeholder="Todos os anos"
             />
             <FilterSelect
-              label="MÃªs"
+              label="Mês"
               value={mesSelecionado}
               onChange={(value) => {
                 setMesSelecionado(value)
@@ -523,11 +531,11 @@ export default function MapaBrasil() {
                   <h2 className="text-lg font-black">Investimento por UF</h2>
                   <p className="text-sm text-zinc-500">
                     Estados em vermelho mais intenso concentram maior valor
-                    lÃ­quido.
+                    líquido.
                   </p>
                 </div>
                 <span className="w-fit rounded-full bg-zinc-100 px-3 py-1 text-xs font-black text-zinc-500">
-                  Base: {baseMapa === "cliente" ? "Cliente" : "AgÃªncia"}
+                  Base: {baseMapa === "cliente" ? "Cliente" : "Agência"}
                 </span>
               </div>
 
@@ -626,7 +634,7 @@ export default function MapaBrasil() {
                 Ver todos os PIs de {estadoSelecionado.uf}
               </strong>
               <p className="mt-1 text-sm text-zinc-500">
-                Abre a pÃ¡gina dedicada com anunciantes, agÃªncias, todos os PIs e modal de detalhes.
+                Abre a página dedicada com anunciantes, agências, todos os PIs e modal de detalhes.
               </p>
             </button>
           )}
@@ -637,7 +645,7 @@ export default function MapaBrasil() {
           <div className="flex flex-col gap-1 border-b border-zinc-200 p-4 sm:p-5">
             <h2 className="text-lg font-black">Ranking de UFs</h2>
             <p className="text-sm text-zinc-500">
-              Ordenado por valor lÃ­quido no filtro atual.
+              Ordenado por valor líquido no filtro atual.
             </p>
           </div>
 
@@ -646,9 +654,9 @@ export default function MapaBrasil() {
               <thead className="bg-zinc-50 text-xs uppercase text-zinc-500">
                 <tr>
                   <th className="px-4 py-3 font-black">UF</th>
-                  <th className="px-4 py-3 font-black">Valor LÃ­quido</th>
+                  <th className="px-4 py-3 font-black">Valor Líquido</th>
                   <th className="px-4 py-3 font-black">Valor Bruto</th>
-                  <th className="px-4 py-3 font-black">ParticipaÃ§Ã£o</th>
+                  <th className="px-4 py-3 font-black">Participação</th>
                   <th className="px-4 py-3 text-right font-black">
                     Quantidade PIs
                   </th>
@@ -721,11 +729,11 @@ export default function MapaBrasil() {
             {tooltip.uf || "UF"}
           </strong>
           <div className="mt-2 space-y-1 text-xs font-semibold text-zinc-600">
-            <div>LÃ­quido: {money(estadoTooltip?.liquido || 0)}</div>
+            <div>Líquido: {money(estadoTooltip?.liquido || 0)}</div>
             <div>Bruto: {money(estadoTooltip?.bruto || 0)}</div>
             <div>PIs: {estadoTooltip?.pis || 0}</div>
             <div>
-              ParticipaÃ§Ã£o:{" "}
+              Participação:{" "}
               {totais.liquido > 0 && estadoTooltip
                 ? `${((estadoTooltip.liquido / totais.liquido) * 100).toFixed(1)}%`
                 : "0.0%"}
@@ -845,10 +853,10 @@ function StatePanel({
       </div>
 
       <div className="grid gap-3">
-        <PanelMetric label="Total lÃ­quido" value={money(resumo.liquido)} />
+        <PanelMetric label="Total líquido" value={money(resumo.liquido)} />
         <PanelMetric label="Total bruto" value={money(resumo.bruto)} />
         <PanelMetric label="Quantidade de PIs" value={String(resumo.pis)} />
-        <PanelMetric label="ParticipaÃ§Ã£o no filtro" value={`${percentual.toFixed(1)}%`} />
+        <PanelMetric label="Participação no filtro" value={`${percentual.toFixed(1)}%`} />
       </div>
     </aside>
   )
