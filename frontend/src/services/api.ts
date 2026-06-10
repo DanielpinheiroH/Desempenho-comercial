@@ -40,6 +40,29 @@ export function clearUser() {
   limparPisCache()
 }
 
+let redirecionandoParaLogin = false
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      clearToken()
+      clearUser()
+
+      if (
+        typeof window !== "undefined" &&
+        window.location.pathname !== "/login" &&
+        !redirecionandoParaLogin
+      ) {
+        redirecionandoParaLogin = true
+        window.location.replace("/login")
+      }
+    }
+
+    return Promise.reject(error)
+  }
+)
+
 export async function getPisCached() {
   const token = getToken()
 

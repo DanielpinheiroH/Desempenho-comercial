@@ -7,7 +7,7 @@ import {
 import { scaleLinear } from "d3-scale"
 import { useNavigate } from "react-router-dom"
 
-import { api, getToken } from "../services/api"
+import { api, getToken, getUser } from "../services/api"
 
 const GEO_URL =
   "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson"
@@ -175,6 +175,8 @@ function getUf(item: Pi, baseMapa: BaseMapa) {
 
 export default function MapaBrasil() {
   const navigate = useNavigate()
+  const user = getUser()
+  const executivoAtual = user?.executivo || user?.nome || ""
   const [dados, setDados] = useState<Pi[]>([])
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState("")
@@ -185,6 +187,15 @@ export default function MapaBrasil() {
   const [subperfilSelecionado, setSubperfilSelecionado] = useState("")
   const [ufSelecionada, setUfSelecionada] = useState("")
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
+
+  const dadosDoEscopo = useMemo(() => {
+    if (user?.role !== "executivo") return dados
+
+    const executivoNormalizado = normalizar(executivoAtual)
+    return dados.filter(
+      (item) => normalizar(item.executivo) === executivoNormalizado
+    )
+  }, [dados, executivoAtual, user?.role])
 
   useEffect(() => {
     async function carregarDados() {
@@ -214,14 +225,16 @@ export default function MapaBrasil() {
 
   const anos = useMemo(() => {
     return Array.from(
-      new Set(dados.map((item) => getAno(item.mes_venda)).filter(Boolean))
+      new Set(
+        dadosDoEscopo.map((item) => getAno(item.mes_venda)).filter(Boolean)
+      )
     ).sort((a, b) => Number(b) - Number(a))
-  }, [dados])
+  }, [dadosDoEscopo])
 
   const meses = useMemo(() => {
     return Array.from(
       new Set(
-        dados
+        dadosDoEscopo
           .filter(
             (item) => !anoSelecionado || getAno(item.mes_venda) === anoSelecionado
           )
@@ -229,22 +242,22 @@ export default function MapaBrasil() {
           .filter(Boolean)
       )
     ).sort((a, b) => Number(a) - Number(b))
-  }, [dados, anoSelecionado])
+  }, [dadosDoEscopo, anoSelecionado])
 
   const perfis = useMemo(() => {
     return Array.from(
       new Set(
-        dados
+        dadosDoEscopo
           .map((item) => String(item.perfil_anunciante || "").trim())
           .filter(Boolean)
       )
     ).sort((a, b) => a.localeCompare(b, "pt-BR"))
-  }, [dados])
+  }, [dadosDoEscopo])
 
   const subperfis = useMemo(() => {
     return Array.from(
       new Set(
-        dados
+        dadosDoEscopo
           .filter(
             (item) =>
               !perfilSelecionado ||
@@ -254,10 +267,10 @@ export default function MapaBrasil() {
           .filter(Boolean)
       )
     ).sort((a, b) => a.localeCompare(b, "pt-BR"))
-  }, [dados, perfilSelecionado])
+  }, [dadosDoEscopo, perfilSelecionado])
 
   const dadosFiltrados = useMemo(() => {
-    return dados.filter((item) => {
+    return dadosDoEscopo.filter((item) => {
       const bateAno = !anoSelecionado || getAno(item.mes_venda) === anoSelecionado
       const bateMes = !mesSelecionado || getMes(item.mes_venda) === mesSelecionado
       const batePerfil =
@@ -270,7 +283,7 @@ export default function MapaBrasil() {
       return bateAno && bateMes && batePerfil && bateSubperfil && possuiUf
     })
   }, [
-    dados,
+    dadosDoEscopo,
     anoSelecionado,
     mesSelecionado,
     perfilSelecionado,

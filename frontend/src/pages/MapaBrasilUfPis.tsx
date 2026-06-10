@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 
-import { api, getToken } from "../services/api"
+import { api, getToken, getUser } from "../services/api"
 
 type BaseMapa = "cliente" | "agencia"
 
@@ -28,6 +28,14 @@ type RankingItem = {
   bruto: number
   pis: number
   itens: Pi[]
+}
+
+function normalizar(value?: string | null) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
 }
 
 function onlyNumber(value?: number | string | null) {
@@ -103,6 +111,8 @@ function aggregateRanking(dados: Pi[], campo: keyof Pi, limite = 12) {
 
 export default function MapaBrasilUfPis() {
   const navigate = useNavigate()
+  const user = getUser()
+  const executivoAtual = user?.executivo || user?.nome || ""
   const { uf = "" } = useParams()
   const [searchParams] = useSearchParams()
   const baseMapa: BaseMapa =
@@ -118,6 +128,15 @@ export default function MapaBrasilUfPis() {
   const [loading, setLoading] = useState(true)
   const [erro, setErro] = useState("")
   const [piSelecionado, setPiSelecionado] = useState<Pi | null>(null)
+
+  const dadosDoEscopo = useMemo(() => {
+    if (user?.role !== "executivo") return dados
+
+    const executivoNormalizado = normalizar(executivoAtual)
+    return dados.filter(
+      (item) => normalizar(item.executivo) === executivoNormalizado
+    )
+  }, [dados, executivoAtual, user?.role])
 
   useEffect(() => {
     async function carregarDados() {
@@ -146,14 +165,14 @@ export default function MapaBrasilUfPis() {
   }, [])
 
   const pisDaUf = useMemo(() => {
-    return dados
+    return dadosDoEscopo
       .filter((item) => getUf(item, baseMapa) === ufAtual)
       .filter((item) => !ano || getAno(item.mes_venda) === ano)
       .filter((item) => !mes || getMes(item.mes_venda) === mes)
       .filter((item) => !perfil || item.perfil_anunciante === perfil)
       .filter((item) => !subperfil || item.sub_perfil_anunciante === subperfil)
       .sort((a, b) => onlyNumber(b.valor_liquido) - onlyNumber(a.valor_liquido))
-  }, [dados, baseMapa, ufAtual, ano, mes, perfil, subperfil])
+  }, [dadosDoEscopo, baseMapa, ufAtual, ano, mes, perfil, subperfil])
 
   const topAnunciantes = useMemo(
     () => aggregateRanking(pisDaUf, "anunciante"),

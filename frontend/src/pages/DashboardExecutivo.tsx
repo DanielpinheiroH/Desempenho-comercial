@@ -7,7 +7,13 @@ import {
 } from "react-simple-maps"
 import { scaleLinear } from "d3-scale"
 
-import { api, getToken, getUser } from "../services/api"
+import {
+  api,
+  clearToken,
+  clearUser,
+  getToken,
+  getUser,
+} from "../services/api"
 
 const MAPA_BRASIL_GEO_URL =
   "https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson"
@@ -524,43 +530,59 @@ export default function DashboardExecutivo() {
     setAnoAberto((atual) => (atual === ano ? null : ano))
   }
 
+  function sair() {
+    clearToken()
+    clearUser()
+    window.location.href = "/login"
+  }
+
   return (
     <main className="space-y-6 text-zinc-950">
       <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <div>
-          <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
-            {visaoGrupoEstadual
-              ? "Gestão Executiva + Governo Estadual / GDF"
-              : "Meu perfil comercial"}
-          </span>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <span className="mb-3 inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-red-700">
+              {visaoGrupoEstadual
+                ? "Gestão Executiva + Governo Estadual / GDF"
+                : "Meu perfil comercial"}
+            </span>
 
-          <h1 className="text-3xl font-black tracking-tight md:text-4xl">
-            Olá, {user?.nome || "Executivo"}
-          </h1>
+            <h1 className="text-3xl font-black tracking-tight md:text-4xl">
+              Olá, {user?.nome || "Executivo"}
+            </h1>
 
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
-            {visaoGrupoEstadual
-              ? "Acompanhe os mesmos dados do admin para Gestão Executiva, Governo Estadual e GDF, sem Governo Federal e Comercial Privado."
-              : "Acompanhe suas vendas, faturamento mensal, desempenho e PIs vinculados ao seu nome."}
-          </p>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">
+              {visaoGrupoEstadual
+                ? "Acompanhe os mesmos dados do admin para Gestão Executiva, Governo Estadual e GDF, sem Governo Federal e Comercial Privado."
+                : "Acompanhe suas vendas, faturamento mensal, desempenho e PIs vinculados ao seu nome."}
+            </p>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => navigate("/executivo-carteira")}
-              className="rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-700"
-            >
-              Ver carteira
-            </button>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/executivo-carteira")}
+                className="rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-700"
+              >
+                Ver carteira
+              </button>
 
-            <button
-              type="button"
-              onClick={() => navigate("/busca-pi")}
-              className="rounded-xl border border-zinc-200 px-5 py-3 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600"
-            >
-              Buscar PI
-            </button>
+              <button
+                type="button"
+                onClick={() => navigate("/busca-pi")}
+                className="rounded-xl border border-zinc-200 px-5 py-3 text-sm font-bold text-zinc-700 transition hover:border-red-500 hover:text-red-600"
+              >
+                Buscar PI
+              </button>
+            </div>
           </div>
+
+          <button
+            type="button"
+            onClick={sair}
+            className="h-11 w-full shrink-0 rounded-xl border border-red-200 bg-red-50 px-5 text-sm font-black text-red-700 transition hover:border-red-600 hover:bg-red-600 hover:text-white sm:w-auto"
+          >
+            Sair
+          </button>
         </div>
       </section>
 
@@ -742,34 +764,44 @@ export default function DashboardExecutivo() {
                 </p>
               </div>
 
-              <div className="flex rounded-2xl bg-zinc-100 p-1">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="flex rounded-2xl bg-zinc-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBaseMapa("cliente")
+                      setUfMapaSelecionada("")
+                    }}
+                    className={`h-10 flex-1 rounded-xl px-4 text-xs font-black transition sm:flex-none ${
+                      baseMapa === "cliente"
+                        ? "bg-red-600 text-white shadow-sm"
+                        : "text-zinc-600 hover:bg-white"
+                    }`}
+                  >
+                    Cliente
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBaseMapa("agencia")
+                      setUfMapaSelecionada("")
+                    }}
+                    className={`h-10 flex-1 rounded-xl px-4 text-xs font-black transition sm:flex-none ${
+                      baseMapa === "agencia"
+                        ? "bg-red-600 text-white shadow-sm"
+                        : "text-zinc-600 hover:bg-white"
+                    }`}
+                  >
+                    Agência
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  onClick={() => {
-                    setBaseMapa("cliente")
-                    setUfMapaSelecionada("")
-                  }}
-                  className={`h-10 flex-1 rounded-xl px-4 text-xs font-black transition sm:flex-none ${
-                    baseMapa === "cliente"
-                      ? "bg-red-600 text-white shadow-sm"
-                      : "text-zinc-600 hover:bg-white"
-                  }`}
+                  onClick={() => navigate("/mapa-brasil")}
+                  className="h-12 rounded-2xl bg-zinc-950 px-5 text-xs font-black text-white transition hover:bg-red-700 sm:h-auto"
                 >
-                  Cliente
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setBaseMapa("agencia")
-                    setUfMapaSelecionada("")
-                  }}
-                  className={`h-10 flex-1 rounded-xl px-4 text-xs font-black transition sm:flex-none ${
-                    baseMapa === "agencia"
-                      ? "bg-red-600 text-white shadow-sm"
-                      : "text-zinc-600 hover:bg-white"
-                  }`}
-                >
-                  Agência
+                  Abrir mapa completo
                 </button>
               </div>
             </div>
